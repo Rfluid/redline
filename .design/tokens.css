@@ -1,0 +1,146 @@
+/* redline design tokens (v2). Source of truth with tokens.json: change both together.
+ * Light is the default. The overlay sets data-theme on its shadow host from the page's own
+ * background (see color.md); `:host` lines apply inside the shadow root, `:root` for standalone pages
+ * such as the Streamlit frontend.
+ */
+:root, :host {
+  /* palette */
+  --rl-red: #D7261E;
+  --rl-blue: #2B4C7E;
+  --rl-ink: #1B1A17;
+  --rl-paper: #FBFAF7;
+
+  /* text */
+  --rl-fg: #1B1A17;
+  --rl-muted: #5E5A53;
+  --rl-hint: #6E695F;
+
+  /* surfaces */
+  --rl-surface: #FBFAF7;
+  --rl-raised: #FFFFFF;
+  --rl-line: #E4E0D8;
+  --rl-line-soft: #F0EDE7;
+  --rl-code: #EFECE6;
+
+  /* actions */
+  --rl-primary: #1B1A17;
+  --rl-on-primary: #F3EFE7;
+  --rl-focus: #2B4C7E;
+
+  /* red pen: marks on the artifact */
+  --rl-mark: #D7261E;
+  --rl-mark-fg: #B01E17;
+  --rl-mark-tint-draft: rgba(215, 38, 30, .06);
+  --rl-mark-tint: rgba(215, 38, 30, .12);
+  --rl-mark-tint-focus: rgba(215, 38, 30, .22);
+
+  /* blue pencil: the agent */
+  --rl-agent: #2B4C7E;
+  --rl-agent-tint: rgba(43, 76, 126, .12);
+  --rl-agent-tint-focus: rgba(43, 76, 126, .22);
+
+  /* feedback */
+  --rl-note: #B26A00;
+  --rl-note-fg: #8A4B00;
+  --rl-note-tint: #FFF4E0;
+  --rl-note-line: #F2D9A8;
+  --rl-done: #2F6B3F;
+  --rl-done-tint: rgba(47, 107, 63, .10);
+
+  /* elevation */
+  --rl-shadow-pop: 0 12px 32px rgba(27, 26, 23, .14), 0 2px 6px rgba(27, 26, 23, .06);
+  --rl-shadow-dock: 0 6px 20px rgba(27, 26, 23, .12);
+  --rl-shadow-sheet: 0 -10px 30px rgba(27, 26, 23, .18);
+  --rl-scrim: rgba(27, 26, 23, .18);
+
+  /* type */
+  --rl-font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rl-font-quote: "Iowan Old Style", "Charter", "Georgia", "Cambria", serif;
+  --rl-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --rl-text-quote: italic 400 15.5px/22px var(--rl-font-quote);
+  --rl-text-body: 400 14px/20px var(--rl-font-ui);
+  --rl-text-ui: 500 13px/18px var(--rl-font-ui);
+  --rl-text-label: 600 12px/16px var(--rl-font-ui);
+  --rl-text-hint: 400 11.5px/16px var(--rl-font-ui);
+  --rl-text-code: 400 12.5px/1.4 var(--rl-font-mono);
+
+  /* space and shape */
+  --rl-space-1: 4px;
+  --rl-space-2: 8px;
+  --rl-space-3: 12px;
+  --rl-space-4: 16px;
+  --rl-space-5: 20px;
+  --rl-space-6: 24px;
+  --rl-radius-tag: 6px;
+  --rl-radius-btn: 8px;
+  --rl-radius-input: 9px;
+  --rl-radius-pop: 12px;
+  --rl-radius-sheet: 18px;
+  --rl-radius-full: 999px;
+
+  /* sizes */
+  --rl-marker: 26px;
+  --rl-btn-h: 34px;
+  --rl-pop-w: 360px;
+  --rl-compose-w: 380px;
+  --rl-drawer-w: 360px;
+  --rl-target-touch: 44px;
+
+  /* motion */
+  --rl-ease-out: cubic-bezier(.2, .8, .2, 1);
+  --rl-dur-fast: 120ms;
+  --rl-dur-slide: 180ms;
+}
+
+:root[data-theme="dark"], :host([data-theme="dark"]) {
+  --rl-red: #FF5A4E;
+  --rl-blue: #8DB0E8;
+
+  --rl-fg: #F3EFE7;
+  --rl-muted: #B9B3A8;
+  --rl-hint: #8E887D;
+
+  --rl-surface: #1A1916;
+  --rl-raised: #23221E;
+  --rl-line: #3A3832;
+  --rl-line-soft: #2C2B27;
+  --rl-code: #2C2B27;
+
+  --rl-primary: #F3EFE7;
+  --rl-on-primary: #1B1A17;
+  --rl-focus: #8DB0E8;
+
+  --rl-mark: #FF5A4E;
+  --rl-mark-fg: #FF8A80;
+  --rl-mark-tint-draft: rgba(255, 90, 78, .10);
+  --rl-mark-tint: rgba(255, 90, 78, .20);
+  --rl-mark-tint-focus: rgba(255, 90, 78, .32);
+
+  --rl-agent: #8DB0E8;
+  --rl-agent-tint: rgba(141, 176, 232, .16);
+  --rl-agent-tint-focus: rgba(141, 176, 232, .28);
+
+  --rl-note: #E0A84A;
+  --rl-note-fg: #F2C77A;
+  --rl-note-tint: rgba(224, 168, 74, .14);
+  --rl-note-line: rgba(224, 168, 74, .35);
+  --rl-done: #7FC08F;
+  --rl-done-tint: rgba(127, 192, 143, .14);
+
+  --rl-shadow-pop: 0 16px 40px rgba(0, 0, 0, .5);
+  --rl-shadow-dock: 0 8px 24px rgba(0, 0, 0, .45);
+  --rl-shadow-sheet: 0 -10px 30px rgba(0, 0, 0, .5);
+  --rl-scrim: rgba(0, 0, 0, .4);
+}
+
+@media (max-width: 600px) {
+  :root, :host {
+    --rl-text-body: 400 15px/22px var(--rl-font-ui);
+    --rl-text-ui: 500 14px/20px var(--rl-font-ui);
+    --rl-btn-h: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root, :host { --rl-dur-fast: 0ms; --rl-dur-slide: 0ms; }
+}

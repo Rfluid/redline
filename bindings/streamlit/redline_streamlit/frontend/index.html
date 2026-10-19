@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- redline Streamlit component: a comment button for one widget. No build step; speaks the
+     Streamlit component protocol (postMessage) directly and loads client.js from the daemon.
+     Looks: .design/ (tokens mirror .design/tokens.css); light or dark follows the Streamlit theme. -->
+<style>
+  :root { --rl-fg: #1B1A17; --rl-muted: #5E5A53; --rl-hint: #6E695F; --rl-surface: #FBFAF7; --rl-raised: #FFFFFF; --rl-line: #E4E0D8;
+          --rl-line-soft: #F0EDE7; --rl-primary: #1B1A17; --rl-on-primary: #F3EFE7; --rl-focus: #2B4C7E; --rl-mark: #D7261E; --rl-mark-fg: #B01E17;
+          --rl-mark-tint-draft: rgba(215, 38, 30, .06); --rl-agent: #2B4C7E; --rl-agent-tint: rgba(43, 76, 126, .12); --rl-done: #2F6B3F;
+          --rl-done-tint: rgba(47, 107, 63, .10); --rl-note-fg: #8A4B00; --rl-note-tint: #FFF4E0; --rl-note-line: #F2D9A8;
+          --rl-font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --rl-font-quote: "Iowan Old Style", "Charter", "Georgia", "Cambria", serif; }
+  :root[data-theme="dark"] { --rl-fg: #F3EFE7; --rl-muted: #B9B3A8; --rl-hint: #8E887D; --rl-surface: #1A1916; --rl-raised: #23221E; --rl-line: #3A3832;
+          --rl-line-soft: #2C2B27; --rl-primary: #F3EFE7; --rl-on-primary: #1B1A17; --rl-focus: #8DB0E8; --rl-mark: #FF5A4E; --rl-mark-fg: #FF8A80;
+          --rl-mark-tint-draft: rgba(255, 90, 78, .10); --rl-agent: #8DB0E8; --rl-agent-tint: rgba(141, 176, 232, .16); --rl-done: #7FC08F;
+          --rl-done-tint: rgba(127, 192, 143, .14); --rl-note-fg: #F2C77A; --rl-note-tint: rgba(224, 168, 74, .14); --rl-note-line: rgba(224, 168, 74, .35); }
+  * { box-sizing: border-box; margin: 0; font: 400 14px/20px var(--rl-font-ui); }
+  body { color: var(--rl-fg); background: transparent; padding: 2px; }
+  svg { display: block; flex: none; width: 14px; height: 14px; }
+  :focus-visible { outline: 2px solid var(--rl-focus); outline-offset: 2px; }
+  button { height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--rl-line); border-radius: 8px;
+           background: var(--rl-raised); color: var(--rl-fg); font: 500 13px/18px var(--rl-font-ui); cursor: pointer; white-space: nowrap; }
+  button:hover { background: var(--rl-line-soft); }
+  button.p { border-color: var(--rl-primary); background: var(--rl-primary); color: var(--rl-on-primary); font-weight: 600; }
+  button.p:hover { filter: brightness(1.08); } button.g { border-color: transparent; background: transparent; color: var(--rl-muted); }
+  .toggle svg { color: var(--rl-mark); } .toggle.on { border-color: var(--rl-fg); }
+  .n { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--rl-mark); color: var(--rl-mark); display: inline-flex; align-items: center;
+       justify-content: center; font: 600 10px/1 var(--rl-font-ui); } .n.answered, .n.working { border-color: var(--rl-agent); color: var(--rl-agent); }
+  .n.answered { background: var(--rl-agent); color: var(--rl-surface); }
+  .box { margin-top: 8px; padding: 12px; border: 1px solid var(--rl-line); border-radius: 12px; background: var(--rl-surface); display: flex; flex-direction: column; gap: 12px; }
+  .q { font: italic 400 15px/22px var(--rl-font-quote); color: var(--rl-muted); } .q u { text-decoration: none; border-bottom: 1.5px solid var(--rl-mark); color: var(--rl-fg); font: inherit; }
+  .thread { display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--rl-line); }
+  .th { display: flex; align-items: center; gap: 8px; } .th .sp { flex: 1; } .th button { height: 28px; }
+  .st { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font: 600 11.5px/16px var(--rl-font-ui); color: var(--rl-mark-fg); background: var(--rl-mark-tint-draft); }
+  .st.working, .st.answered { color: var(--rl-agent); background: var(--rl-agent-tint); } .st.resolved { color: var(--rl-done); background: var(--rl-done-tint); }
+  .msg { display: flex; gap: 10px; }
+  .av { flex: none; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--rl-mark); color: #fff; font: 600 11px/1 var(--rl-font-ui); }
+  .av.agent { background: var(--rl-agent); color: var(--rl-surface); } .av svg { width: 12px; height: 12px; }
+  .who { font: 400 12px/16px var(--rl-font-ui); color: var(--rl-muted); } .who b { font: 600 12px/16px var(--rl-font-ui); color: var(--rl-fg); } .who b.agent { color: var(--rl-agent); }
+  .body { white-space: pre-wrap; overflow-wrap: anywhere; }
+  textarea { width: 100%; min-height: 64px; resize: vertical; padding: 10px 12px; border: 1px solid var(--rl-line); border-radius: 9px; background: var(--rl-raised); color: var(--rl-fg); }
+  textarea:focus { outline: 3px solid var(--rl-agent-tint); border-color: var(--rl-focus); }
+  .row { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+  .err { font: 400 12px/16px var(--rl-font-ui); color: var(--rl-note-fg); background: var(--rl-note-tint); border: 1px solid var(--rl-note-line); padding: 6px 10px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function () {
+  "use strict";
+  const send = (type, extra) => parent.postMessage({ isStreamlitMessage: true, type, ...extra }, "*");
+  const setHeight = () => send("streamlit:setFrameHeight", { height: document.body.scrollHeight + 4 });
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const svg = (d) => `<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+  const PEN = svg("M4 20l4-1 11-11-3-3L5 16z"), CHECK = svg("M5 12.5l4.5 4.5L19 7.5");
+  const STATUS = { open: "Open", working: "Working", answered: "Answered", resolved: "Resolved" };
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const root = document.getElementById("root");
+  let args = null, client = null, threads = [], open = false, error = "";
+
+  const mine = () => threads.filter((t) => t.anchor && t.anchor.kind === "app" && t.anchor.key === args.anchor_key);
+
+  function message(m) {
+    const agent = m.author === "agent";
+    return `<div class="msg"><span class="av${agent ? " agent" : ""}" aria-hidden="true">${agent ? PEN : "Y"}</span>
+      <div><div class="who"><b${agent ? ' class="agent"' : ""}>${agent ? "Agent" : "You"}</b></div><div class="body">${esc(m.body)}</div></div></div>`;
+  }
+
+  function render() {
+    const ts = mine(), live = ts.filter((t) => t.status !== "resolved"), last = live[live.length - 1];
+    const drafts = client ? client.drafts() : [];
+    const label = (last ? `<span class="n ${esc(last.status)}">${live.length}</span>${STATUS[last.status]}` : `${PEN}Comment`) +
+      (drafts.length ? ` · ${plural(drafts.length, "draft", "drafts")}` : "");
+    root.innerHTML = `<button class="toggle${open ? " on" : ""}" data-a="toggle" aria-expanded="${open}" title="Comment on ${esc(args.label)} for the agent">${label}</button>` +
+      (open ? `<div class="box"><div class="q">“<u>${esc(args.label)}</u>”</div>${ts.map((t) => `<div class="thread" data-id="${esc(t.id)}">
+        <div class="th"><span class="st ${esc(t.status)}">${STATUS[t.status] || esc(t.status)}</span><span class="sp"></span>
+          ${t.status !== "resolved" ? `<button data-a="resolve" data-id="${esc(t.id)}">${CHECK}Resolve</button>` : ""}</div>
+        ${t.messages.map(message).join("")}</div>`).join("")}
+        <label><textarea name="redline-comment" aria-label="Comment for the agent" placeholder="${ts.length ? "Reply or new comment" : "Comment"} on ${esc(args.label)}…"></textarea></label>
+        ${error ? `<div class="err" role="alert">${esc(error)}</div>` : ""}
+        <div class="row">${drafts.length ? `<button class="p" data-a="send-drafts">Send ${plural(drafts.length, "draft", "drafts")}</button>` : ""}
+          <button data-a="draft">Save draft</button>${ts.length ? `<button data-a="reply">Reply</button>` : ""}<button class="${drafts.length ? "" : "p"}" data-a="send">${ts.length ? "New comment" : "Send"}</button></div></div>` : "");
+    setHeight();
+  }
+
+  root.addEventListener("click", async (e) => {
+    const el = e.target.closest("[data-a]"), act = el && el.dataset.a;
+    if (!act) return;
+    error = "";
+    try {
+      if (act === "toggle") open = !open;
+      else if (act === "resolve") await client.setStatus(el.dataset.id, "resolved");
+      else if (act === "send-drafts") await client.submitDrafts();
+      else {
+        const body = root.querySelector("textarea").value.trim();
+        if (!body) return;
+        const last = mine().pop();
+        const anchor = { kind: "app", key: args.anchor_key, label: args.label, page: pagePath() };
+        if (act === "draft") { client.addDraft({ anchor, body }); render(); return; }
+        if (act === "reply" && last) await client.reply(last.id, body);
+        else await client.comment(anchor, body);
+      }
+      if (act !== "toggle") threads = await client.threads();
+    } catch (err) { error = `Couldn't send: ${err.message || err}. Nothing was lost.`; }
+    render();
+  });
+
+  function pagePath() { try { return parent.location.pathname; } catch { return "/"; } }
+
+  function upsert(t) {
+    const i = threads.findIndex((x) => x.id === t.id);
+    if (i === -1) threads.push(t); else if (t.updated >= threads[i].updated) threads[i] = t;
+  }
+
+  // Light or dark from the Streamlit theme (its base, else its background's luminance).
+  function applyTheme(theme) {
+    if (!theme) return;
+    const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(theme.backgroundColor || "");
+    const lum = m ? m.slice(1).map((h) => parseInt(h, 16) / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+      .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0) : 1;
+    document.documentElement.dataset.theme = theme.base === "dark" || lum < 0.18 ? "dark" : "light";
+  }
+
+  function start() {
+    const s = document.createElement("script");
+    s.src = args.server + "/client.js";
+    s.onload = async () => {
+      client = new window.Redline.Client({ server: args.server, artifact: args.artifact, token: args.token });
+      client.on("event", (ev) => { upsert(ev.thread); render(); });
+      // Drafts are shared by every widget (same origin, same localStorage key): follow other frames.
+      window.addEventListener("storage", (e) => { if (e.key && e.key.startsWith("redline:drafts:")) render(); });
+      client.on("open", async () => { try { threads = await client.threads(); } catch {} render(); });
+      client.connect();
+    };
+    s.onerror = () => { error = "redline isn't running here. Run any redline command, then reload."; render(); };
+    document.head.appendChild(s);
+  }
+
+  window.addEventListener("message", (e) => {
+    if (!e.data || e.data.type !== "streamlit:render") return;
+    const first = !args;
+    args = e.data.args;
+    applyTheme(e.data.theme);
+    if (first) start();
+    render();
+  });
+  send("streamlit:componentReady", { apiVersion: 1 });
+})();
+</script>
+</body>
+</html>

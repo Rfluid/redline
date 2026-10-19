@@ -1,0 +1,16 @@
+[project]
+name = "redline-streamlit"
+version = "0.1.0"
+description = "redline comment buttons for Streamlit widgets"
+requires-python = ">=3.9"
+dependencies = ["streamlit>=1.30"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["redline_streamlit"]
+
+[tool.setuptools.package-data]
+redline_streamlit = ["frontend/*.html"]

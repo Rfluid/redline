@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a change or a new capability.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        redline only carries comments between an artifact and an agent session: it never renders or serves the artifact,
+        and the daemon stays on 127.0.0.1. Ideas that keep to that fit best. Check `docs/ROADMAP.md` first; it may be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and what gets in the way today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you'd like redline to do. A sketch of the UI, CLI or MCP tool helps.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Workarounds or other designs you considered.
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you open a PR?
+      options:
+        - "Yes"
+        - Maybe, with guidance
+        - "No"
