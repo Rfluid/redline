@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Entry point agents and PATH link to.
+# - With cargo: builds the release binary on first use, or when the sources changed.
+# - Without cargo (or REDLINE_PREBUILT=1): downloads this version's release binary once.
+set -euo pipefail
+src="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || python3 -c 'import os,sys;print(os.path.realpath(sys.argv[1]))' "${BASH_SOURCE[0]}")"
+repo="$(cd "$(dirname "$src")/.." && pwd)"
+export REDLINE_REPO="$repo" # the binary links this clone, not wherever it was built
+
+# Git Bash and friends on Windows: bin/redline.ps1 is the Windows entry point.
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*)
+    exec powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -w "$repo/bin/redline.ps1")" "$@" ;;
+esac
+
+if [[ "${REDLINE_PREBUILT:-}" != 1 ]] && command -v cargo >/dev/null; then
+  exe="$repo/target/release/redline"
+  build() { cargo build --release --quiet --manifest-path "$repo/Cargo.toml"; }
+  if [[ ! -x "$exe" ]]; then
+    build >&2
+  elif [[ -n "$(find "$repo/src" "$repo/web" "$repo/migrations" "$repo/Cargo.toml" "$repo/build.rs" -newer "$exe" -print -quit 2>/dev/null)" ]]; then
+    if [[ "${1:-}" == mcp ]]; then
+      # Agents give an MCP server ~30s to start; a rebuild takes longer. Serve this session with the
+      # current binary and rebuild in the background. The daemon handshake picks up the new one later.
+      logdir="${REDLINE_HOME:-$HOME/.local/state/redline}"
+      mkdir -p "$logdir" && (build >>"$logdir/build.log" 2>&1 &)
+    else
+      build >&2
+    fi
+  fi
+  exec "$exe" "$@"
+fi
+
+version="$(sed -n 's/^version = "\(.*\)"/\1/p' "$repo/Cargo.toml" | head -1)"
+exe="$repo/target/prebuilt/redline"
+if [[ ! -x "$exe" ]] || [[ "$("$exe" --version 2>/dev/null | cut -d' ' -f2)" != "$version" ]]; then
+  case "$(uname -s)-$(uname -m)" in
+    Linux-x86_64) triple=x86_64-unknown-linux-gnu ;;
+    Linux-aarch64 | Linux-arm64) triple=aarch64-unknown-linux-gnu ;;
+    Darwin-arm64) triple=aarch64-apple-darwin ;;
+    Darwin-x86_64) triple=x86_64-apple-darwin ;;
+    *) echo "redline: no release binary for $(uname -sm); install Rust (https://rustup.rs)" >&2; exit 1 ;;
+  esac
+  slug="${REDLINE_RELEASE_REPO:-Rfluid/redline}" name="redline-$version-$triple.tar.gz"
+  tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+  echo "redline: downloading $name (no cargo found)" >&2
+  if command -v gh >/dev/null && gh auth status >/dev/null 2>&1; then
+    gh release download "v$version" -R "$slug" -p "$name" -p "$name.sha256" -D "$tmp" >&2
+  else
+    base="https://github.com/$slug/releases/download/v$version"
+    curl -fsSL "$base/$name" -o "$tmp/$name" && curl -fsSL "$base/$name.sha256" -o "$tmp/$name.sha256" || {
+      echo "redline: download failed; for a private repo, log in with \`gh auth login\`, or install Rust" >&2; exit 1; }
+  fi
+  (cd "$tmp" && { sha256sum -c "$name.sha256" 2>/dev/null || shasum -a 256 -c "$name.sha256"; } >/dev/null) \
+    || { echo "redline: checksum mismatch for $name" >&2; exit 1; }
+  tar -xzf "$tmp/$name" -C "$tmp"
+  mkdir -p "$repo/target/prebuilt"
+  mv "$tmp/redline-$version-$triple/redline" "$exe.new" && chmod +x "$exe.new" && mv "$exe.new" "$exe"
+fi
+exec "$exe" "$@"

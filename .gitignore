@@ -1,0 +1,4 @@
+/target
+/logs/
+__pycache__/
+*.egg-info/

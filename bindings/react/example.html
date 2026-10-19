@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><title>redline React example</title>
+<!-- Own comment UI with useRedline(); no overlay.js. React and htm come from a CDN so there's no build.
+     Replace the redline:embed comment with ONLY the client.js tag from register_artifact's `embed`. -->
+<script type="importmap">
+{ "imports": {
+  "react": "https://esm.sh/react@18.3.1",
+  "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+  "htm": "https://esm.sh/htm@3.1.1"
+} }
+</script>
+<style>
+  /* redline's look (.design/): red pen for your marks, blue pencil for the agent, ink on paper. */
+  :root { --rl-fg: #1B1A17; --rl-muted: #5E5A53; --rl-surface: #FBFAF7; --rl-raised: #FFFFFF; --rl-line: #E4E0D8; --rl-primary: #1B1A17;
+          --rl-on-primary: #F3EFE7; --rl-mark: #D7261E; --rl-mark-fg: #B01E17; --rl-mark-tint-draft: rgba(215, 38, 30, .06); --rl-agent: #2B4C7E;
+          --rl-agent-tint: rgba(43, 76, 126, .12); --rl-done: #2F6B3F; --rl-done-tint: rgba(47, 107, 63, .10); --rl-note-fg: #8A4B00; --rl-focus: #2B4C7E; }
+  * { box-sizing: border-box; }
+  body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--rl-fg); max-width: 760px; margin: 32px auto; padding: 0 16px; }
+  header { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--rl-muted); }
+  header .live::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; border: 1.5px solid currentColor; }
+  header .live.on { color: var(--rl-done); } header .live.on::before { background: currentColor; } header .sp { flex: 1; }
+  .card { border: 1px solid var(--rl-line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; background: var(--rl-raised); display: flex; flex-direction: column; gap: 10px; }
+  .card h2 { margin: 0; font-size: 16px; } .big { font-size: 28px; font-weight: 700; }
+  .thread { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-top: 1px solid var(--rl-line); }
+  .st { align-self: flex-start; padding: 2px 8px; border-radius: 999px; font: 600 11.5px/16px system-ui, sans-serif; color: var(--rl-mark-fg); background: var(--rl-mark-tint-draft); }
+  .st.working, .st.answered { color: var(--rl-agent); background: var(--rl-agent-tint); } .st.resolved { color: var(--rl-done); background: var(--rl-done-tint); }
+  .msg b { font-weight: 600; } .msg.agent b { color: var(--rl-agent); }
+  textarea { width: 100%; min-height: 56px; padding: 8px 10px; border: 1px solid var(--rl-line); border-radius: 9px; font: inherit; color: inherit; background: var(--rl-raised); }
+  textarea:focus { outline: 3px solid var(--rl-agent-tint); border-color: var(--rl-focus); }
+  .row { display: flex; gap: 6px; justify-content: flex-end; }
+  button { height: 32px; padding: 0 12px; border: 1px solid var(--rl-line); border-radius: 8px; background: var(--rl-raised); color: var(--rl-fg); font: 500 13px system-ui, sans-serif; cursor: pointer; }
+  button.p { border-color: var(--rl-primary); background: var(--rl-primary); color: var(--rl-on-primary); font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; } :focus-visible { outline: 2px solid var(--rl-focus); outline-offset: 2px; }
+  .err { color: var(--rl-note-fg); }
+</style>
+</head>
+<body>
+<!-- redline:embed (client.js tag only) -->
+<div id="app"></div>
+<script type="module">
+  import { createElement, useState } from "react";
+  import { createRoot } from "react-dom/client";
+  import htm from "htm";
+  import { useRedline, threadsFor } from "./useRedline.js";
+  const html = htm.bind(createElement);
+
+  const STATUS = { open: "Open", working: "Working", answered: "Answered", resolved: "Resolved" };
+  const METRICS = [
+    { key: "revenue", title: "Revenue", value: "$1.2M" },
+    { key: "churn", title: "Churn", value: "2.1%" },
+    { key: "nps", title: "NPS", value: "47" },
+  ];
+
+  function Card({ m }) {
+    const rl = useRedline();
+    const [text, setText] = useState("");
+    const anchor = { kind: "app", key: m.key, label: m.title };
+    const threads = threadsFor(rl.threads, m.key);
+    const send = async (draft) => {
+      if (!text.trim()) return;
+      if (draft) rl.addDraft({ anchor, body: text }); else await rl.comment(anchor, text);
+      setText("");
+    };
+    return html`<div class="card" data-key=${m.key}>
+      <h2>${m.title}</h2><div class="big">${m.value}</div>
+      ${threads.map((t) => html`<div class="thread" key=${t.id}><span class=${"st " + t.status}>${STATUS[t.status]}</span>
+        ${t.messages.map((msg) => html`<div class=${"msg " + msg.author} key=${msg.id}><b>${msg.author === "agent" ? "Agent" : "You"}:</b> ${msg.body}</div>`)}
+      </div>`)}
+      <textarea value=${text} onInput=${(e) => setText(e.target.value)} placeholder=${"Comment on " + m.title}></textarea>
+      <div class="row"><button data-a="draft" onClick=${() => send(true)}>Save draft</button>
+        <button class="p" data-a="send" onClick=${() => send(false)}>Send</button></div>
+    </div>`;
+  }
+
+  function App() {
+    const rl = useRedline();
+    const n = rl.drafts.length;
+    return html`<header><span class=${"live" + (rl.connected ? " on" : "")}>${rl.connected ? "Live" : "Reconnecting… comments are kept"}</span>
+        ${rl.error && html`<span class="err">${rl.error}</span>`}<span class="sp"></span>
+        ${n > 0 && html`<button class="p" data-a="send-drafts" onClick=${() => rl.submitDrafts()}>Send ${n} ${n === 1 ? "draft" : "drafts"}</button>`}</header>
+      ${METRICS.map((m) => html`<${Card} m=${m} key=${m.key} />`)}`;
+  }
+
+  createRoot(document.getElementById("app")).render(html`<${App} />`);
+</script>
+</body>
+</html>

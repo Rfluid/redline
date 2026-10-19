@@ -1,0 +1,194 @@
+name: release
+
+# Push a tag vX.Y.Z (matching Cargo.toml; scripts/prepare-release.sh sets it) to run CI on the tagged
+# commit, build the binaries and publish a GitHub Release.
+# - vX.Y.Z: a full release, marked latest (unless a higher vX.Y.Z already exists, e.g. a backport).
+# - vX.Y.Z-<pre> (v0.3.0-beta, v1.0.0-rc.1): a prerelease, never marked latest.
+# Run it by hand (workflow_dispatch) for a dry run: same checks and builds, nothing is published.
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to plan for (default: v<Cargo.toml version>). Dry run: nothing is published."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      tag: ${{ steps.plan.outputs.tag }}
+      prerelease: ${{ steps.plan.outputs.prerelease }}
+      latest: ${{ steps.plan.outputs.latest }}
+      publish: ${{ steps.plan.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # all tags, to tell whether this one is the highest release
+      - name: Plan the release
+        id: plan
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          cargo_version="$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          if [[ "$GITHUB_EVENT_NAME" == push ]]; then
+            tag="$GITHUB_REF_NAME" publish=true
+          else
+            tag="${INPUT_TAG:-v$cargo_version}" publish=false
+          fi
+          version="${tag#v}"
+          stable_re='^v[0-9]+\.[0-9]+\.[0-9]+$'
+          pre_re='^v[0-9]+\.[0-9]+\.[0-9]+-[0-9A-Za-z][0-9A-Za-z.-]*$'
+          if [[ "$tag" =~ $stable_re ]]; then
+            prerelease=false
+            # Latest only if no higher stable tag exists (a v0.2.3 backport after v0.3.0 isn't latest).
+            highest="$( { git tag --list 'v*'; echo "$tag"; } | grep -E "$stable_re" | sort -V | tail -1)"
+            if [[ "$highest" == "$tag" ]]; then latest=true; else latest=false; fi
+          elif [[ "$tag" =~ $pre_re ]]; then
+            prerelease=true latest=false
+          else
+            echo "::error::tag $tag is neither vX.Y.Z nor vX.Y.Z-<prerelease>"; exit 1
+          fi
+          if [[ "$version" != "$cargo_version" ]]; then
+            if [[ "$publish" == true ]]; then
+              echo "::error::tag $tag != Cargo.toml version $cargo_version (run scripts/prepare-release.sh)"; exit 1
+            fi
+            echo "::warning::dry run: $tag != Cargo.toml version $cargo_version; building $cargo_version"
+            version="$cargo_version"
+          fi
+          {
+            echo "version=$version"; echo "tag=$tag"; echo "prerelease=$prerelease"
+            echo "latest=$latest"; echo "publish=$publish"
+          } | tee -a "$GITHUB_OUTPUT"
+          {
+            echo "### redline $tag"
+            echo "| version | prerelease | marked latest | publish |"
+            echo "|---|---|---|---|"
+            echo "| $version | $prerelease | $latest | $publish |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux via zig: links against glibc 2.28, so the binary runs on older distros too.
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, glibc: ".2.28" }
+          - { os: ubuntu-latest, target: aarch64-unknown-linux-gnu, glibc: ".2.28" }
+          - { os: macos-14, target: aarch64-apple-darwin }
+          - { os: macos-14, target: x86_64-apple-darwin }
+          # Windows: a .zip with redline.exe. ARM64 cross-compiles with MSVC's ARM64 tools.
+          - { os: windows-latest, target: x86_64-pc-windows-msvc }
+          - { os: windows-latest, target: aarch64-pc-windows-msvc }
+    runs-on: ${{ matrix.os }}
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      REDLINE_GIT_SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install the toolchain from rust-toolchain.toml
+        shell: bash
+        run: |
+          rustup toolchain install "$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)" --profile minimal
+          rustup target add ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Install zig + cargo-zigbuild
+        if: runner.os == 'Linux'
+        run: |
+          pip install ziglang==0.15.2
+          cargo install cargo-zigbuild --version 0.23.4 --locked
+      - name: Build
+        shell: bash
+        run: |
+          export REDLINE_GIT_SHA="${REDLINE_GIT_SHA:0:10}"
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            cargo zigbuild --release --locked --target ${{ matrix.target }}${{ matrix.glibc }}
+          else
+            cargo build --release --locked --target ${{ matrix.target }}
+          fi
+      - name: Smoke test
+        if: contains(fromJSON('["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-pc-windows-msvc"]'), matrix.target)
+        shell: bash
+        run: |
+          out="$("target/${{ matrix.target }}/release/redline" --version)"
+          echo "$out"
+          [[ "$out" == "redline $VERSION "* ]] || { echo "::error::expected redline $VERSION, got: $out"; exit 1; }
+      - name: Package
+        shell: bash
+        run: |
+          name="redline-$VERSION-${{ matrix.target }}"
+          mkdir -p "dist/$name"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            cp "target/${{ matrix.target }}/release/redline.exe" README.md CHANGELOG.md "dist/$name/"
+            (cd dist && 7z a -tzip "$name.zip" "$name" >/dev/null && sha256sum "$name.zip" > "$name.zip.sha256")
+          else
+            cp "target/${{ matrix.target }}/release/redline" README.md CHANGELOG.md "dist/$name/"
+            tar -C dist -czf "dist/$name.tar.gz" "$name"
+            (cd dist && shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256")
+          fi
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            dist/*.tar.gz*
+            dist/*.zip*
+          if-no-files-found: error
+
+  release:
+    needs: [plan, ci, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.plan.outputs.tag }}
+      VERSION: ${{ needs.plan.outputs.version }}
+      PRERELEASE: ${{ needs.plan.outputs.prerelease }}
+      LATEST: ${{ needs.plan.outputs.latest }}
+      PUBLISH: ${{ needs.plan.outputs.publish }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Release notes
+        run: |
+          set -euo pipefail
+          section() { awk -v h="## [$1]" 'index($0, h) == 1 {on=1; next} on && /^## \[/ {exit} on' CHANGELOG.md; }
+          section "$VERSION" > notes.md
+          # A prerelease usually has no section of its own yet: use what's unreleased so far.
+          if ! grep -q '[^[:space:]]' notes.md && [[ "$PRERELEASE" == true ]]; then section Unreleased > notes.md; fi
+          if ! grep -q '[^[:space:]]' notes.md; then echo "::warning::CHANGELOG.md has no notes for $VERSION"; fi
+          cat notes.md
+          ls -l dist
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          args=(--title "redline $VERSION" --notes-file notes.md --verify-tag)
+          if [[ "$PRERELEASE" == true ]]; then args+=(--prerelease --latest=false)
+          else args+=(--latest="$LATEST"); fi
+          if [[ "$PUBLISH" != true ]]; then
+            echo "Dry run; would run: gh release create $TAG dist/* ${args[*]}" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh release create "$TAG" dist/* "${args[@]}"
+          gh release view "$TAG" --json tagName,isPrerelease,isDraft,url

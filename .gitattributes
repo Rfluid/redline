@@ -1,0 +1,5 @@
+# LF everywhere, also in Windows checkouts (core.autocrlf would break the bash scripts under Git Bash).
+* text=auto eol=lf
+# cmd.exe misparses some batch files with LF endings.
+*.cmd text eol=crlf
+*.png binary

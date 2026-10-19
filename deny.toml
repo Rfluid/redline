@@ -1,0 +1,37 @@
+# cargo-deny: `just deny` locally, .github/workflows/audit.yml in CI.
+# Docs: https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+all-features = false
+
+[advisories]
+# RustSec advisories. Every vulnerability fails; unmaintained/unsound only for crates we depend on directly.
+unmaintained = "workspace"
+unsound = "workspace"
+yanked = "deny"
+ignore = []
+
+[licenses]
+# Binaries ship under MIT, so every dependency's license must allow redistribution in one.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CDLA-Permissive-2.0", # webpki-roots (Mozilla's CA bundle, via ureq)
+    "ISC",
+    "MPL-2.0", # option-ext (via dirs): file-level copyleft, fine unmodified
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

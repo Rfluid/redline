@@ -1,0 +1,6 @@
+# diesel CLI config. `diesel migration generate <name>` / `diesel print-schema` (see docs/DEVELOPMENT.md).
+[print_schema]
+file = "src/store/schema.rs"
+
+[migrations_directory]
+dir = "migrations"

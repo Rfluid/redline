@@ -1,0 +1,55 @@
+name: pr
+
+# Checks that only matter on pull requests. The repo merges with "Rebase and merge" only,
+# so every commit in a PR lands on main as is: each one must be a clean Conventional Commit.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  commits:
+    name: conventional commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Every commit is a Conventional Commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          types='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+          re="^(${types})(\([a-z0-9._/-]+\))?!?: [^ ].{0,98}$"
+          bad=0
+          while IFS=$'\t' read -r sha parents subject; do
+            if [[ "$parents" == *" "* ]]; then
+              echo "::error::${sha:0:10} is a merge commit; rebase on main instead (git rebase main)"; bad=1
+            elif [[ "$subject" =~ ^(fixup|squash|amend)! ]]; then
+              echo "::error::${sha:0:10} \"$subject\": fold it in (git rebase -i --autosquash main)"; bad=1
+            elif ! [[ "$subject" =~ $re ]]; then
+              echo "::error::${sha:0:10} \"$subject\": expected <type>(<scope>): <summary>, type one of ${types//|/, }, at most 100 chars"; bad=1
+            else
+              echo "ok  ${sha:0:10} $subject"
+            fi
+          done < <(git log --format='%H%x09%P%x09%s' "$BASE..$HEAD")
+          exit "$bad"
+
+  workflows:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Lint GitHub workflows
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+          ./actionlint -color

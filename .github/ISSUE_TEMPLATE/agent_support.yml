@@ -1,0 +1,35 @@
+name: Support another coding agent
+description: Ask `redline install` to support an agent it doesn't know yet.
+labels: [enhancement, agent-support]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `redline install` needs to know where the agent keeps skills and its MCP config. Links to the agent's docs make this quick.
+  - type: input
+    id: agent
+    attributes:
+      label: Agent
+      placeholder: Name, version, link
+    validations:
+      required: true
+  - type: textarea
+    id: skills
+    attributes:
+      label: Skills or rules
+      description: Does it load `SKILL.md`-style skills? From which directory (user-level and project-level)?
+    validations:
+      required: true
+  - type: textarea
+    id: mcp
+    attributes:
+      label: MCP
+      description: Does it support MCP over stdio? Where is the config file, and in what format (JSON, JSONC, TOML)? Paste a minimal server entry.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Background tools, long-running commands, push notifications, quirks.

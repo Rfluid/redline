@@ -1,0 +1,30 @@
+# Weekly dependency PRs. Minor/patch bumps are grouped into one PR per ecosystem; majors come alone.
+# Commit prefixes are Conventional Commits, so the PRs pass pr.yml and rebase-merge cleanly.
+# Security updates (RustSec/GitHub advisories) open right away, outside this schedule.
+# Not tracked: bindings/streamlit (a library: its `streamlit>=1.30` floor is deliberate, not a pin).
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, rust]
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      cargo:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels: [dependencies, github_actions]
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions:
+        patterns: ["*"]

@@ -1,0 +1,79 @@
+name: Bug report
+description: Something in redline doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Comments and artifacts can contain private content: redact anything you don't want public.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        I selected a sentence and sent a comment. I expected the agent to get it, but `wait_for_comments` kept waiting.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. `redline register page.html`
+        2. Open the page, select text, Send
+        3. …
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      multiple: true
+      options:
+        - Overlay in the browser (comments, markers, dock)
+        - Agent side (MCP tools, `redline wait` / `reply`)
+        - Daemon (`redline serve`)
+        - Install / uninstall / update
+        - Streamlit binding
+        - React binding
+        - Docs
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: redline version
+      description: Output of `redline --version`.
+      placeholder: redline 0.2.2 (159e22b)
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Coding agent
+      description: Which agent and version, if it's involved.
+      placeholder: Claude Code 2.x, Codex CLI, Cursor, Gemini CLI, opencode…
+  - type: input
+    id: env
+    attributes:
+      label: OS and browser
+      placeholder: macOS 15 (arm64), Chrome 140
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        `redline doctor`, `redline status`, the daemon log (`daemon.log` in the state dir, `~/.local/state/redline/` by default), and browser console errors, if any.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this isn't a duplicate.
+          required: true
+        - label: I'm on the latest release (`redline update check`), or I said why not above.

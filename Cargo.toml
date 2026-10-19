@@ -1,0 +1,56 @@
+[package]
+name = "redline"
+version = "0.1.0"
+edition = "2024"
+description = "Inline review comments between artifacts and coding-agent sessions"
+license = "MIT"
+
+[dependencies]
+anyhow = "1.0.104"
+axum = { version = "0.8.9", features = ["ws"] }
+base64 = "0.22.1"
+clap = { version = "4.6.7", features = ["derive", "env"] }
+diesel = { version = "2.3.14", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
+diesel_migrations = { version = "2.3.2", features = ["sqlite"] }
+dirs = "7.0.0"
+libsqlite3-sys = { version = "0.38", features = ["bundled"] }
+rmcp = { version = "3.5.1", features = ["server", "macros", "transport-io"] }
+schemars = "1.2.3"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+tokio = { version = "1.53.3", features = ["full"] }
+toml_edit = "0.25.17"
+tower-http = { version = "0.7.1", features = ["cors", "trace"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "env-filter", "std"] }
+ureq = { version = "2", features = ["json"] }
+uuid = { version = "1.28.0", features = ["v4"] }
+
+[target.'cfg(windows)'.dependencies]
+junction = "2.1.0"
+
+[dev-dependencies]
+tempfile = "3.27.0"
+tower = { version = "0.5.3", features = ["util"] }
+
+[lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[lints.clippy]
+# Pedantic by default; the allows below are deliberate (see docs/CODE_STYLE.md).
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+must_use_candidate = "allow"
+needless_pass_by_value = "allow" # axum extractors are taken by value
+# Hygiene beyond pedantic.
+dbg_macro = "warn"
+todo = "warn"
+unwrap_used = "warn"
+print_stderr = "allow"
+
+[profile.release]
+lto = "thin"
+strip = true
