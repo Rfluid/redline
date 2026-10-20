@@ -16,6 +16,7 @@
     spot: icon("M12 2v4M12 18v4M2 12h4M18 12h4", '<circle cx="12" cy="12" r="7"/>'),
     check: icon("M5 12.5l4.5 4.5L19 7.5"),
     close: icon("M6 6l12 12M18 6L6 18"),
+    select: icon("M9 11l3 3 8-8M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"),
     send: icon("M5 12h14M13 6l6 6-6 6"),
     mark,
   };

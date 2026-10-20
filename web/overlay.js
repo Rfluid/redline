@@ -27,6 +27,7 @@
   const V = ui.view.create({ c, host, markers, dock, phone });
   const { S, setHidden, numbers, upsert, newDrafts, place, highlight, renderDock, renderDrawer, paint, applyTheme, targetRect, locateAll, markSeen } = V;
   const upd = ui.update.mount(root, { c, S, renderDock, toast: dock.toast });
+  const bulk = ui.bulk.create({ c, S, dock, renderDrawer, refresh, fail: (m) => fail(m), closePop });
 
   // ---- popover ----------------------------------------------------------------------------------
   function openPop(p) {
@@ -158,6 +159,7 @@
   }
 
   function toggleDrawer(open) {
+    if (!open) { S.selecting = false; S.picked.clear(); }
     dock.setDrawer(open);
     if (open) renderDrawer();
     place();
@@ -188,14 +190,15 @@
     spot: pinSpot,
     "send-drafts": () => sendDrafts(),
     ...upd.actions,
+    ...bulk.actions,
   };
   root.addEventListener("click", (e) => {
     const el = e.target.closest && e.target.closest("[data-a]");
-    if (el && ACTIONS[el.dataset.a]) ACTIONS[el.dataset.a](el.dataset.id, el);
+    if (el && ACTIONS[el.dataset.a]) ACTIONS[el.dataset.a](el.dataset.id, el, e);
   });
   pop.addEventListener("input", (e) => { if (e.target.tagName === "TEXTAREA") grow(e.target); });
 
-  R.ui.overlayInput.mount({ root, host, pop, chipEl, S, ACTIONS, closePop, openPop, submitCompose, sendReply, toggleDrawer, toggleHidden, dock, markers, highlight, place });
+  R.ui.overlayInput.mount({ root, host, pop, chipEl, S, ACTIONS, closePop, openPop, submitCompose, sendReply, toggleDrawer, toggleHidden, selectMode: bulk.mode, dock, markers, highlight, place });
 
   // ---- data -------------------------------------------------------------------------------------
   function dataChanged() { locateAll(); paint(); if (S.pop && S.pop.kind !== "compose") renderPop(false); }

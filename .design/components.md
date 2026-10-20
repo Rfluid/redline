@@ -118,8 +118,10 @@ The chip opens a card where the toast sits (24 px right, 84 px bottom; above the
 
 Opens from the dock summary. A 360 px sheet on the right, full height, `--rl-surface`, over the page with **no** backdrop (the page stays usable).
 
-- **Header:** "Threads", a segmented control *Open N* / *Resolved N*, spacer, **Send K drafts** (primary, when K > 0), close.
+- **Header:** a segmented control *Open N* / *Resolved N* ("Threads" is the heading for screen readers only: 360 px has no room for it beside the buttons), spacer, **Send K** (primary, when K > 0; labelled "Send K drafts"), **Select** toggle, close.
 - **Rows:** 22 px marker, the quote (serif italic, one line), then the state on the right ("Draft", "Working", "1 new reply" in `--rl-agent` 600). Clicking a row scrolls the page to the anchor, closes the drawer and opens that thread's popover.
+- **Select mode:** off by default, so rows stay plain and open their thread. A **Select** toggle (ghost icon button, check-square icon, before close; `--rl-code` fill while on) turns it on: each row gets a 15 px checkbox (`accent-color: --rl-primary`) before its marker, and the whole row becomes the checkbox's label, so a click anywhere toggles it instead of opening the thread. Shift+click selects the range from the last row clicked. A selected row gets a 7% `--rl-primary` tint. Selection covers only the tab on screen: switching tabs drops it. While selecting, the header's **Send K** gives way to the bar's Send. Esc, the toggle or closing the drawer leaves the mode and drops the selection.
+- **Selection bar** (Select mode only, under the header): a select-all checkbox (indeterminate when only some rows are selected), then "Select all" or "N selected" (600, `--rl-fg`), spacer, then the actions that fit the selection: **Resolve** (outline, for open/working/answered threads), **Reopen** (outline, for resolved threads), **Send** (primary, drafts) and **Discard** (ghost, `--rl-mark-fg`, drafts). An action shows a count when it covers only part of the selection ("Resolve 3"). Resolve and Discard show a toast with **Undo**.
 - Drafts list first, then threads in page order.
 - **Empty:** "No comments yet. Select any text on the page to start."
 

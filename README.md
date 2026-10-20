@@ -92,7 +92,7 @@ Second Claude profile? Add `--claude-config-dir ~/.claude-work`.
 3. **Select text → Comment.** For a chart, image or anything without text, click the **spot** button (⌖) in the dock, then the spot. Write your note, then:
    - **Send** to deliver it now, or
    - **Save draft** to collect several, then **Send drafts** in the dock to send them together.
-4. Each comment gets a numbered marker in the margin. Red means it's waiting on the agent; blue means the agent is on it or has answered. While the agent hasn't answered yet, a small arc circles the marker and the thread says where it stands. Click a marker to open the thread: the agent's replies appear as they come in, with a short note while it's working. Reply back to keep going, or **Resolve** when you're happy. The dock lists every thread, including resolved ones.
+4. Each comment gets a numbered marker in the margin. Red means it's waiting on the agent; blue means the agent is on it or has answered. While the agent hasn't answered yet, a small arc circles the marker and the thread says where it stands. Click a marker to open the thread: the agent's replies appear as they come in, with a short note while it's working. Reply back to keep going, or **Resolve** when you're happy. The dock lists every thread, including resolved ones; switch it to Select to resolve, reopen, send or discard them in one go.
 5. Tell your agent when you're done reviewing.
 
 <p align="center">

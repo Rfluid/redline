@@ -232,6 +232,49 @@ await steps([
     await b.waitFor("$rl('.pop.show') === null");
   }],
 
+  ["the drawer's Select mode picks rows (Shift+click for a range, or all) and resolves or discards them at once", async () => {
+    await b.eval("Redline.client.addDraft({ anchor: { kind: 'text', page: '/', quote: 'March' }, body: 'bulk draft' })");
+    await b.eval("$rl('[data-a=\"drawer\"]').click()");
+    await b.waitFor("$$rl('.drawer .dr').length > 2");
+    assert.equal(await b.eval("$$rl('.drawer [data-a=\"pick\"]').length + ($rl('.dbar') ? 1 : 0)"), 0); // off until asked for
+    await b.eval("$rl('[data-a=\"select-mode\"]').click()");
+    await b.waitFor("$$rl('.drawer [data-a=\"pick\"]').length > 2 && $rl('.dbar') !== null");
+    const picks = "$$rl('.drawer [data-a=\"pick\"]')", bar = "$rl('.dbar').textContent.replace(/\\s+/g, ' ')";
+    const threads = await b.eval(`${picks}.slice(1).map((x) => x.dataset.id)`); // the draft lists first
+    await b.eval(`${picks}[1].closest('.dr').click()`); // a click anywhere on the row picks it, and opens nothing
+    await b.eval(`${picks}.at(-1).dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }))`);
+    await b.waitFor(`${bar}.includes('${threads.length} selected') && $rl('[data-a="pick-all"]').indeterminate`);
+    assert.equal(await b.eval("$rl('.pop.show')"), null);
+    // Esc leaves Select mode first (dropping the selection), then closes the drawer.
+    const esc = "$rl('.drawer').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true }))";
+    await b.eval(esc);
+    await b.waitFor(`${picks}.length === 0 && $rl('.drawer.show') !== null`);
+    await b.eval("$rl('[data-a=\"select-mode\"]').click()");
+    await b.waitFor(`${picks}.every((x) => !x.checked)`);
+    await b.eval("$rl('[data-a=\"pick-all\"]').click()");
+    await b.waitFor(`${bar}.includes('Resolve ${threads.length}') && ${bar}.includes('Discard 1')`);
+
+    await b.eval("$rl('[data-a=\"bulk-resolve\"]').click()");
+    await b.waitFor(`$rl('.toast.show')?.textContent.includes('${threads.length} threads resolved')`);
+    const status = () => agent.json("list", reg.artifact_id).filter((t) => threads.includes(t.id)).map((t) => t.status);
+    assert.deepEqual([...new Set(status())], ["resolved"]);
+    await b.eval("$rl('.toast [data-a=\"toast-action\"]').click()"); // Undo
+    await b.waitFor(`$rl('.drawer [data-tab="resolved"]').textContent.trim() === 'Resolved 0'`);
+    assert.deepEqual([...new Set(status())], ["open"]);
+    await agent.wait(SESSION); // the resolve and reopen events: keep the agent's cursor current
+
+    // Resolve took only the threads: the draft is still selected, and the bar now offers only what fits it.
+    await b.waitFor(`${picks}[0].checked && ${bar}.includes('1 selected') && !${bar}.includes('Resolve')`);
+    await b.eval("$rl('[data-a=\"bulk-discard\"]').click()");
+    await b.waitFor("Redline.client.drafts().length === 0 && $rl('.toast.show')?.textContent.includes('1 draft discarded')");
+    await b.eval("$rl('.toast [data-a=\"toast-action\"]').click()");
+    await b.waitFor("Redline.client.drafts()[0]?.body === 'bulk draft'");
+    await b.eval("Redline.client.removeDraft(Redline.client.drafts()[0].id)");
+    await b.eval(esc);
+    await b.eval(esc);
+    await b.waitFor("$rl('.drawer.show') === null");
+  }],
+
   ["a failed send keeps the comment as a draft and offers Retry", async () => {
     await b.eval("window._submit = Redline.client.submit; Redline.client.submit = () => Promise.reject(new Error('offline'))");
     await b.eval("comment('p2', 'enterprise', 'will fail once', 'send')");
