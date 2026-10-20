@@ -173,7 +173,7 @@
             background: var(--rl-surface); color: var(--rl-fg); border-left: 1px solid var(--rl-line); box-shadow: var(--rl-shadow-pop);
             animation: rl-left var(--rl-dur-slide) var(--rl-ease-out); }
   .drawer.show { display: flex; } :host(.drawer-open) .dock { right: 384px; }
-  .dh { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 16px; border-bottom: 1px solid var(--rl-line); }
+  .dh { display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 16px; border-bottom: 1px solid var(--rl-line); }
   .dh h2 { font: 600 14px/20px var(--rl-font-ui); } .dh .sp { flex: 1; }
   .seg { display: inline-flex; gap: 2px; padding: 2px; background: var(--rl-code); border-radius: 7px; }
   .seg button { border: 0; background: transparent; padding: 3px 9px; border-radius: 5px; font: 400 12px/16px var(--rl-font-ui); color: var(--rl-muted); white-space: nowrap; }
@@ -181,6 +181,16 @@
   .dl { overflow: auto; flex: 1; }
   .dr { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 16px; border: 0; border-bottom: 1px solid var(--rl-line-soft); background: transparent; text-align: left; }
   .dr:hover { background: var(--rl-line-soft); }
+  .dr.pick { padding-left: 13px; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .dr.pick.on { background: color-mix(in srgb, var(--rl-primary) 7%, transparent); } .dr.pick:has(.pk:focus-visible) { outline: 2px solid var(--rl-focus); outline-offset: -2px; }
+  .dr.pick .pk:focus-visible { outline: 0; }
+  .pkw { flex: none; width: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .pk { flex: none; width: 15px; height: 15px; margin: 0; accent-color: var(--rl-primary); cursor: pointer; }
+  .dh .btn[aria-pressed="true"] { background: var(--rl-code); color: var(--rl-fg); }
+  .dbar { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rl-line); }
+  .dbar .pkw { align-self: stretch; } .dbar .sp { flex: 1; } .dbar .acts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+  .dbar .btn.sm { padding: 0 9px; } .dbar .btn.g { color: var(--rl-mark-fg); }
+  .dbar .dn { font: 400 12px/16px var(--rl-font-ui); color: var(--rl-muted); white-space: nowrap; } .dbar.on .dn { font-weight: 600; color: var(--rl-fg); }
   .dr .mk { position: static; flex: none; width: 22px; height: 22px; font-size: 11px; animation: none; }
   .dr .q { display: block; flex: 1; min-width: 0; font-size: 14.5px; color: var(--rl-fg); } .dr .s { font: 400 12px/16px var(--rl-font-ui); color: var(--rl-muted); white-space: nowrap; }
   .dr .s.new { color: var(--rl-agent); font-weight: 600; }

@@ -9,7 +9,9 @@
   function create({ c, host, markers, dock, phone }) {
     const ui = R.ui;
     // pop: {kind: "compose", anchor, image, hl} | {kind: "thread" | "draft", id}
-    const S = { threads: [], where: new Map(), pop: null, sel: null, hover: null, tab: "open", conn: "connecting", theme: "", hidden: false, update: null };
+    // selecting: the drawer is in selection mode; picked: its selected rows (keys: thread or draft ids);
+    // shown: the drawer's rows in the current tab.
+    const S = { threads: [], where: new Map(), pop: null, sel: null, selecting: false, picked: new Set(), shown: [], hover: null, tab: "open", conn: "connecting", theme: "", hidden: false, update: null };
     // Toggled off ("clean view"): remembered per artifact, in this browser.
     const hiddenKey = `redline:hidden:${c.artifact}`;
     try { S.hidden = localStorage.getItem(hiddenKey) === "1"; } catch {}
@@ -88,12 +90,16 @@
     function renderDrawer() {
       const nums = numbers(), y = (id) => { const el = markers.el(id); return el ? parseFloat(el.style.top) : Infinity; };
       const rows = c.drafts().map((d) => d.thread_id
-        ? { id: d.thread_id, n: nums.get(d.thread_id), state: "reply", anchor: (S.threads.find((t) => t.id === d.thread_id) || {}).anchor }
-        : { id: d.id, n: nums.get(d.id), state: "draft", anchor: d.anchor });
+        ? { id: d.thread_id, key: d.id, n: nums.get(d.thread_id), state: "reply", anchor: (S.threads.find((t) => t.id === d.thread_id) || {}).anchor }
+        : { id: d.id, key: d.id, n: nums.get(d.id), state: "draft", anchor: d.anchor });
       for (const t of [...S.threads].sort((a, b) => y(a.id) - y(b.id) || a.created - b.created)) {
-        rows.push({ id: t.id, n: nums.get(t.id), state: t.status, anchor: t.anchor, unseen: unseen(t), resolved: t.status === "resolved" });
+        rows.push({ id: t.id, key: t.id, n: nums.get(t.id), state: t.status, anchor: t.anchor, unseen: unseen(t), resolved: t.status === "resolved" });
       }
-      dock.renderDrawer(rows, S.tab, c.drafts().length);
+      // The selection only ever holds rows on screen: switching tabs, sending or resolving drops the rest.
+      S.shown = rows.filter((r) => !!r.resolved === (S.tab === "resolved"));
+      const keys = new Set(S.shown.map((r) => r.key));
+      for (const k of S.picked) if (!keys.has(k)) S.picked.delete(k);
+      dock.renderDrawer(rows, S.tab, c.drafts().length, S.selecting ? S.picked : null);
     }
 
     function paint() { place(); highlight(); renderDock(); if (dock.isOpen()) renderDrawer(); }

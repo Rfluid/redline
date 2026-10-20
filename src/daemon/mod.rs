@@ -35,7 +35,7 @@ const UPDATE_TICK: Duration = Duration::from_hours(1);
 const CORS_MAX_AGE_SECS: u64 = 600;
 const DEFAULT_LOG_FILTER: &str = "redline=info,tower_http=info";
 /// `/client.js` is the anchors helpers plus the protocol client; `/overlay.js` the styles, icons, theme,
-/// region picker, markdown renderer, markers, popovers, dock, update notice, view (state + painting), input handling and
+/// region picker, markdown renderer, markers, popovers, dock, update notice, view (state + painting), input handling, drawer bulk actions and
 /// the overlay itself.
 /// One URL each, so the embed snippet doesn't change when files split.
 const CLIENT_JS: &str = concat!(include_str!("../../web/anchors.js"), include_str!("../../web/client.js"));
@@ -51,6 +51,7 @@ const OVERLAY_JS: &str = concat!(
     include_str!("../../web/update.js"),
     include_str!("../../web/overlay-view.js"),
     include_str!("../../web/overlay-input.js"),
+    include_str!("../../web/bulk.js"),
     include_str!("../../web/overlay.js")
 );
 

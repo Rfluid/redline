@@ -46,7 +46,7 @@
     // ---- inside our UI: Esc, Ctrl/⌘+Enter, Alt+Enter, and Tab kept inside the popover ------------
     root.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
-        if (S.pop) { e.preventDefault(); o.closePop(); } else if (o.dock.isOpen()) { e.preventDefault(); o.toggleDrawer(false); }
+        if (S.pop) { e.preventDefault(); o.closePop(); } else if (o.dock.isOpen()) { e.preventDefault(); if (S.selecting) o.selectMode(false); else o.toggleDrawer(false); }
         return;
       }
       if (!S.pop || !e.composedPath().includes(pop)) return;

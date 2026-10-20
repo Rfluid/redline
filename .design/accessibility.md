@@ -20,7 +20,8 @@
 | ⌥C / Alt+C | Comment on the selection (skipped while typing in the page's own fields) |
 | ⌘↵ / Ctrl+Enter | Send (compose or reply) |
 | ⌥↵ / Alt+Enter | Save as draft |
-| Esc | Close the popover or drawer |
+| Esc | Close the popover or drawer (in the drawer's Select mode, leave the mode first) |
+| Shift+click (drawer, Select mode) | Select the range from the last row clicked |
 | ⌥⇧R / Alt+Shift+R | Turn redline off (clean page, faint mark only) or back on; announced in the live region |
 | Tab / Shift+Tab | Move through the markers in page order (they follow the document order of their anchors) |
 

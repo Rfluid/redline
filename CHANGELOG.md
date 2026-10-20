@@ -4,6 +4,9 @@ All notable changes to redline. The format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Added
+- The threads list (open it from the dock) has a Select mode: pick threads and drafts one by one, a range with Shift+click, or all at once, then resolve, reopen, send or discard them together. Resolve and discard offer Undo.
+
 ## [0.1.0] - 2026-10-19
 
 First public release.
