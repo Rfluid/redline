@@ -4,7 +4,7 @@ All notable changes to redline. The format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-10-20
+## [0.1.1] - 2026-10-20
 
 ### Added
 - The threads list (open it from the dock) has a Select mode: pick threads and drafts one by one, a range with Shift+click, or all at once, then resolve, reopen, send or discard them together. Resolve and discard offer Undo.
@@ -28,6 +28,6 @@ First public release.
 - Update notices: a daily release check, shown in the dock, the terminal and to your agent. `redline update` installs it; skip a version (`redline update skip`) or turn notices off (`redline update off`).
 - Linux, macOS and Windows. Release binaries for Linux (x86_64, aarch64), macOS (arm64, x86_64) and Windows (x86_64, arm64); `bin/redline` downloads one when `cargo` isn't installed. Install and update use the latest release, not the development branch.
 
-[Unreleased]: https://github.com/Rfluid/redline/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/Rfluid/redline/compare/v0.1.0...v0.2.0
+[Unreleased]: https://github.com/Rfluid/redline/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Rfluid/redline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Rfluid/redline/releases/tag/v0.1.0
