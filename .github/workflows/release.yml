@@ -90,8 +90,8 @@ jobs:
           # Linux via zig: links against glibc 2.28, so the binary runs on older distros too.
           - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, glibc: ".2.28" }
           - { os: ubuntu-latest, target: aarch64-unknown-linux-gnu, glibc: ".2.28" }
-          - { os: macos-14, target: aarch64-apple-darwin }
-          - { os: macos-14, target: x86_64-apple-darwin }
+          - { os: macos-15, target: aarch64-apple-darwin }
+          - { os: macos-15, target: x86_64-apple-darwin }
           # Windows: a .zip with redline.exe. ARM64 cross-compiles with MSVC's ARM64 tools.
           - { os: windows-latest, target: x86_64-pc-windows-msvc }
           - { os: windows-latest, target: aarch64-pc-windows-msvc }

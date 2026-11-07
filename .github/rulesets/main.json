@@ -30,7 +30,7 @@
         "required_status_checks": [
           { "context": "fmt · clippy · js syntax" },
           { "context": "build · test · e2e · browser (ubuntu-latest)" },
-          { "context": "build · test · e2e · browser (macos-14)" },
+          { "context": "build · test · e2e · browser (macos-15)" },
           { "context": "conventional commits" }
         ]
       }
