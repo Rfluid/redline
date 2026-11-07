@@ -30,5 +30,5 @@ Phone (`max-width: 600px`) bumps body to 15 / 22 and UI to 14.
 - **Two weights:** 400 and 600 (500 only for button labels). No bold-italic.
 - **Author line:** name in 600 ("You", or "Agent" in `--rl-agent`), then `· 3 min` in `--rl-muted`.
 - **Quotes** are wrapped in curly quotes “…”, truncated to one line with an ellipsis, and the quoted words carry a 1.5 px `--rl-mark` underline.
-- **Agent markdown** renders within this scale: headings become 14 / 600 (no big headings inside a popover); lists keep a 18 px indent.
+- **Agent markdown** renders within this scale: headings become 14 / 600 (no big headings inside a popover); lists keep a 18 px indent; tables use 13 / 18 with 600 headers on `--rl-code`; quotes and ~~strike~~ use `--rl-muted`.
 - Keep `font-feature-settings: "tnum"` on counts and marker numerals so the digits don't jump.

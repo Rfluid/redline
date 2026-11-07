@@ -206,6 +206,13 @@ await steps([
     const last = "[...$rl('.pop').querySelectorAll('.msg.agent .body')].pop()";
     await b.waitFor(`${last}?.querySelector('strong')?.textContent === 'Done.' && ${last}.querySelectorAll('li').length === 2`);
     assert.equal(await b.eval(`${last}.querySelector('a').getAttribute('href')`), "https://example.com");
+    const wide = "| file | change | lines |\n|---|---|--:|\n" + "| `src/daemon/a_really_long_module_name.rs` | rewrote_the_renderer | 218 |\n".repeat(3);
+    agent.run("reply", thread, `Changes:\n- parser\n  - nested\n- [x] done\n\n> quoted ~~old~~\n\n${wide}`);
+    await b.waitFor(`!!${last}?.querySelector('table')`);
+    assert.deepEqual(await b.eval(`[${last}.querySelector('p').textContent, ${last}.querySelectorAll('li li').length, ${last}.querySelector('li.task input').checked,
+      ${last}.querySelector('blockquote del')?.textContent, ${last}.querySelectorAll('tbody tr').length]`), ["Changes:", 1, true, "old", 3]);
+    // A wide table scrolls inside its own box instead of widening the popover.
+    assert.ok(await b.eval(`${last}.querySelector('.tbl').scrollWidth > ${last}.querySelector('.tbl').clientWidth && $rl('.pop').scrollWidth <= $rl('.pop').clientWidth`));
     agent.run("reply", thread, "<img src=x onerror=alert(1)> [x](javascript:alert(2)) **<script>alert(3)</script>**");
     await b.waitFor(`${last}?.textContent.includes('onerror')`);
     assert.equal(await b.eval(`${last}.querySelectorAll('img, script, a').length`), 0);

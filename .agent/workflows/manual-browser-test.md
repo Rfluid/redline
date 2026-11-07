@@ -11,7 +11,7 @@ python3 - "$emb" "$REDLINE_HOME/demo.html" <<'PY'
 import sys; s=open('examples/demo.html').read()
 open(sys.argv[2],'w').write(s.replace(s[s.index('<!-- redline:embed'):s.index('-->',s.index('<!-- redline:embed'))+3], sys.argv[1]))
 PY
-(cd "$REDLINE_HOME" && python3 -m http.server 7498) &
+(cd "$REDLINE_HOME" && python3 -m http.server 7498 --bind 127.0.0.1) &   # loopback only
 ```
 
 1. **Open** `http://127.0.0.1:7498/demo.html`. If you have a browser tool (chrome-devtools MCP, Playwright), drive it; otherwise ask the user to.

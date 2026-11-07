@@ -57,7 +57,7 @@
   function message(m) {
     const agent = m.author === "agent";
     return `<div class="msg ${agent ? "agent" : "user"}"><span class="av${agent ? " agent" : ""}" aria-hidden="true">${agent ? icon("pen") : "Y"}</span>
-      <div><div class="who"><b${agent ? ` class="agent"` : ""}>${agent ? "Agent" : "You"}</b>${m.created ? ` · ${ago(m.created)}` : ""}</div>
+      <div class="mtx"><div class="who"><b${agent ? ` class="agent"` : ""}>${agent ? "Agent" : "You"}</b>${m.created ? ` · ${ago(m.created)}` : ""}</div>
       <div class="body${agent ? " md" : ""}">${agent ? R.markdown.render(m.body) : esc(m.body)}</div></div></div>`;
   }
 

@@ -109,7 +109,7 @@
   .q u { text-decoration: none; border-bottom: 1.5px solid var(--rl-mark); color: var(--rl-fg); font: inherit; }
   .q svg { display: inline; vertical-align: -2px; margin-right: 4px; width: 14px; height: 14px; color: var(--rl-mark); }
   .thumb { display: block; max-width: 100%; max-height: 96px; border: 1px solid var(--rl-line); border-radius: 6px; }
-  .msg { display: flex; gap: 10px; }
+  .msg { display: flex; gap: 10px; } .mtx { flex: 1; min-width: 0; } /* lets a wide table or code block scroll instead of widening the popover */
   .av { flex: none; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
         background: var(--rl-mark); color: #FFFFFF; font: 600 11px/1 var(--rl-font-ui); }
   .av.agent { background: var(--rl-agent); color: var(--rl-surface); } .av svg { width: 12px; height: 12px; stroke-width: 2.2; }
@@ -118,6 +118,15 @@
   .body { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
   .body.md { white-space: normal; } .body.md p, .body.md ul, .body.md ol, .body.md pre { margin: 2px 0 6px; }
   .body.md ul, .body.md ol { padding-left: 18px; } .body.md strong, .body.md b { font-weight: 600; } .body.md em { font-style: italic; }
+  .body.md > :first-child { margin-top: 0; } .body.md > :last-child { margin-bottom: 0; } .body.md li > p { margin: 0 0 4px; }
+  .body.md li > ul, .body.md li > ol { margin: 0; } .body.md li.task { list-style: none; } .body.md del { text-decoration: line-through; color: var(--rl-muted); }
+  .body.md li.task > input { margin: 0 6px 0 -18px; width: 12px; height: 12px; vertical-align: -1px; accent-color: var(--rl-agent); }
+  .body.md blockquote { margin: 2px 0 6px; padding-left: 10px; border-left: 3px solid var(--rl-line); color: var(--rl-muted); }
+  .body.md hr { border: 0; border-top: 1px solid var(--rl-line); margin: 8px 0; }
+  .body.md .tbl { overflow-x: auto; margin: 2px 0 6px; } .body.md table { border-collapse: collapse; }
+  .body.md th, .body.md td { font: 400 13px/18px var(--rl-font-ui); border: 1px solid var(--rl-line); padding: 3px 8px; text-align: left; vertical-align: top;
+    overflow-wrap: normal; min-width: 64px; } /* whole words: a wide table scrolls in .tbl rather than breaking letters */
+  .body.md th { font-weight: 600; background: var(--rl-code); } .body.md .c { text-align: center; } .body.md .r { text-align: right; }
   .body code { font: 400 12.5px/1.4 var(--rl-font-mono); background: var(--rl-code); padding: 1px 4px; border-radius: 4px; }
   .body pre { overflow: auto; background: var(--rl-code); padding: 8px; border-radius: 6px; } .body pre code { padding: 0; background: none; }
   .body a { color: var(--rl-agent); text-decoration: underline; }

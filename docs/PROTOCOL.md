@@ -95,7 +95,7 @@ Element anchors are `exact` when the selector matches, else `none`. Region ancho
 
 ## Overlay rendering
 
-Agent messages render as a safe markdown subset (`web/markdown.js`): the body is HTML-escaped first, then paragraphs, line breaks, `**bold**`, `*italic*`/`_italic_`, `` `code` ``, fenced code blocks, `-`/`1.` lists, `#` headings (as bold lines) and `[text](url)` links with `http(s):`/`mailto:` only. User messages are plain text.
+Agent messages render as a safe markdown subset (`web/markdown.js`, close to GitHub's): paragraphs (a single newline is a line break), `#` and setext headings (as bold lines), fenced code (```` ``` ```` or `~~~`), `-`/`*`/`+`/`1.` lists (nested, loose, starting at any number, a list right under a line of text), task items `- [ ]`/`- [x]`, `>` quotes, `---` rules and `| pipe |` tables (with `:-:`/`--:` alignment; a wide one scrolls). Inline: `**bold**`, `*italic*`/`_italic_`, `***both***`, `~~strike~~`, `` `code` `` (any backtick run), backslash escapes, and links as `[text](url)`, `<url>` or a bare `https://…`, with `http(s):`/`mailto:` only (anything else stays literal text). Every piece of literal text is HTML-escaped and the only tags are that fixed set, so no HTML from the message survives. User messages are plain text.
 
 ## `client.js` API
 

@@ -179,6 +179,10 @@ Considered: a quiet neutral dev-tool look (safe, forgettable), a friendly collab
 
 Nothing below is built. Each needs the user's approval first, and a final entry above once decided.
 
+## Agent markdown: a hand-written renderer, close to GitHub's
+
+Agents write GitHub-flavoured markdown by habit (a list right under a line of text, nested lists, tables, `- [x]`). `web/markdown.js` follows CommonMark/GFM for those cases instead of pulling in a library (marked + DOMPurify is about 60 KB minified, five times this renderer and more than half of `/overlay.js` again, and a sanitizer is one more thing to keep current). Safety comes from construction, not sanitizing: every piece of literal text is escaped as it is emitted, only a fixed set of tags is ever written, and links take `http(s):`/`mailto:` only. Messages are capped at 64 KB, and the renderer stays linear on hostile input (failed delimiter searches are cached, link patterns are bounded, nesting stops at 12 levels); `tests/bindings/markdown.test.mjs` times the pathological cases. Not supported, on purpose: raw HTML, images (shown as links), footnotes, indented code blocks.
+
 ## Draft P2.1: browser extension as the overlay host (recommended first)
 
 **Goal:** review any page without pasting a snippet, so no token ever sits in the artifact and `redline strip` becomes a safety net, not a step.
