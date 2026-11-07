@@ -4,6 +4,9 @@ All notable changes to redline. The format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Changed
+- Agent replies render markdown much closer to GitHub: a list right under a line of text, nested and numbered-from-any lists, task lists, quotes, tables, strikethrough, rules, escapes and bare links. Wide tables and code blocks scroll inside the reply instead of stretching the thread sideways.
+
 ## [0.1.1] - 2026-10-20
 
 ### Added

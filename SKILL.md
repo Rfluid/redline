@@ -67,7 +67,7 @@ Repeat until the user says they're done:
    - **Unclear:** `reply` with your question. Leave the thread `open` by passing `status: "open"`.
    - **Several comments in one batch:** handle them all, and reply to each thread separately.
 4. The page doesn't refresh itself unless your dev server hot-reloads: after editing a static file, say "reload to see it" in the reply.
-   Replies show up live under the user's comment. Keep them short; the change itself is the main answer. Markdown works: **bold**, *italic*, `code`, fenced code, lists, [links](https://…) (http/https/mailto only). No HTML.
+   Replies show up live under the user's comment. Keep them short; the change itself is the main answer. Markdown works: **bold**, *italic*, ~~strike~~, `code`, fenced code, nested lists, `- [x]` tasks, `>` quotes, tables, headings (shown as bold lines), [links](https://…) and bare URLs (http/https/mailto only). No HTML.
 5. Don't resolve threads yourself unless the user asked you to. Resolving is their call.
 
 When the artifact is regenerated or reloaded, the threads remain. Text anchors re-attach by quote and context. If you edit the quoted text, the overlay finds it by its surrounding text and tags the thread `edited`; if the text is gone, the thread shows as `detached` with the original quote. Say what you changed in your reply.
