@@ -4,6 +4,8 @@ All notable changes to redline. The format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-07
+
 ### Changed
 - Agent replies render markdown much closer to GitHub: a list right under a line of text, nested and numbered-from-any lists, task lists, quotes, tables, strikethrough, rules, escapes and bare links. Wide tables and code blocks scroll inside the reply instead of stretching the thread sideways.
 
@@ -31,6 +33,7 @@ First public release.
 - Update notices: a daily release check, shown in the dock, the terminal and to your agent. `redline update` installs it; skip a version (`redline update skip`) or turn notices off (`redline update off`).
 - Linux, macOS and Windows. Release binaries for Linux (x86_64, aarch64), macOS (arm64, x86_64) and Windows (x86_64, arm64); `bin/redline` downloads one when `cargo` isn't installed. Install and update use the latest release, not the development branch.
 
-[Unreleased]: https://github.com/Rfluid/redline/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Rfluid/redline/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Rfluid/redline/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Rfluid/redline/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Rfluid/redline/releases/tag/v0.1.0
