@@ -23,7 +23,7 @@ toml_edit = "0.25.17"
 tower-http = { version = "0.7.1", features = ["cors", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "env-filter", "std"] }
-ureq = { version = "2", features = ["json"] }
+ureq = { version = "3", features = ["json"] }
 uuid = { version = "1.28.0", features = ["v4"] }
 
 [target.'cfg(windows)'.dependencies]
