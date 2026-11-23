@@ -75,7 +75,7 @@ MCP is request/response, so redline offers three delivery paths. Each agent uses
 | Mechanism | Works with | How |
 |---|---|---|
 | Blocking tool | every MCP agent | `wait_for_comments` long-polls `/api/events` for up to 540s. The skill loops it |
-| Background CLI | agents with background shells (Claude Code) | `redline wait --session S --since N` exits when comments arrive, which wakes the agent. `register_artifact` returns `session` and `since` for it |
+| Background CLI | agents with background shells (Claude Code) | `redline wait --session S --since N` exits when comments arrive, which wakes the agent. `register_artifact` returns `session` and `since` for it. Without `--since` it resumes from a cursor saved per filter in the state dir |
 | Push | Claude Code channels (experimental) | `redline mcp --channel` sends `notifications/claude/channel` per new user event |
 
 All three read the same event log. Agent-authored events are filtered out of agent waits (`author=user`).

@@ -4,6 +4,9 @@ All notable changes to redline. The format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Fixed
+- `redline wait` without `--since` continues where the last wait for the same artifact or session stopped, instead of returning every comment again.
+
 ## [0.1.2] - 2026-11-07
 
 ### Changed

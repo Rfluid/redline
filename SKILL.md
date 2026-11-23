@@ -85,7 +85,7 @@ Use this when your agent can run a shell command in the background and gets noti
 3. When it exits, read its JSON: `events` (same shape as `wait_for_comments`) and `next`.
    - Events: handle them as in the review loop.
    - No events (timeout): nothing happened.
-4. Start the next background wait with `--since <next>`. Repeat until the user is done.
+4. Start the next background wait with `redline wait --session <session> --timeout 600`: without `--since` it continues where the last wait with that `--session` stopped (`--since <next>` does the same). Repeat until the user is done.
 
 Use one cursor: either this recipe or `wait_for_comments`, not both at once, or each sees only part of the stream.
 

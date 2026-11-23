@@ -156,7 +156,7 @@ Redline.overlay.hide(); Redline.overlay.show(); Redline.overlay.toggle(); Redlin
 
 - **Results** are pretty-printed JSON in a text content block. Errors come back as `isError` results.
 - **Waits ride through a daemon restart** (an update replaces the daemon): `wait_for_comments`, `redline wait` and the channel push reconnect, starting a daemon if needed, and keep waiting from the same cursor until the timeout.
-- **The server keeps a per-process cursor,** so `wait_for_comments` with no `since` continues where the last call stopped.
+- **The server keeps a per-process cursor,** so `wait_for_comments` with no `since` continues where the last call stopped. `redline wait` does the same across processes: see CLI.
 - **Session id:** `$REDLINE_SESSION`, or a random `ses_…` per process.
 - **Capabilities:** `tools`. With `--channel` / `REDLINE_CHANNEL=1`, also `experimental["claude/channel"]: {}` (and protocol revisions only up to 2025-11-25, which Claude Code needs for channels), and the server sends one notification per new user comment on its session's artifacts:
 
@@ -184,6 +184,8 @@ redline update skip [X.Y.Z]   ·   redline update off|on                  → Up
 redline serve [--port P]   ·   redline mcp [--channel]
 redline install|uninstall|doctor [--agents a,b] [--claude-config-dir D]… [--skill-dir D]… [--bin-dir D] [--force] [--no-mcp]
 ```
+
+`redline wait` saves its `next` per filter (`--artifact`/`--session` pair) in `<state>/cursors/`. Without `--since` it starts there, so a bare `redline wait --session S` returns only comments no earlier wait with that filter returned. The first wait (or one after the event log was reset) starts at 0. `--since N` overrides it, and the saved cursor moves to that wait's `next`.
 
 The embed is wrapped in `<!-- redline:begin … -->` / `<!-- redline:end -->`. `strip` removes those blocks and any other `<script>` that loads redline (`data-redline-*`, or `/client.js` / `/overlay.js` from `127.0.0.1`/`localhost`), in html/jsx/tsx/vue/svelte/astro/md/templates; directories are walked, skipping dot-dirs, `node_modules`, `target`, `dist`, `build`.
 
