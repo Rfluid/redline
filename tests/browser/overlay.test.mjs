@@ -59,7 +59,7 @@ async function open() {
   await b.waitFor("$rl('.conn').classList.contains('live')");
 }
 
-let thread;
+let thread, firstWait;
 
 await steps([
   ["overlay loads and connects; the empty dock invites a comment", async () => {
@@ -67,8 +67,15 @@ await steps([
     assert.match(await b.eval("$rl('.dock').textContent"), /Select text to comment/);
   }],
 
+  ["the dock says when no agent is listening, and turns Live once one waits", async () => {
+    await b.waitFor("Redline.client.listening === false && $rl('.conn.live.quiet')?.textContent === 'No agent listening'");
+    assert.match(await b.eval("$rl('.conn').title"), /Comments wait here until your agent checks/);
+    firstWait = agent.wait(SESSION);
+    await b.waitFor("Redline.client.listening === true && !$rl('.conn').classList.contains('quiet') && $rl('.conn.live').textContent === 'Live'");
+  }],
+
   ["select → Comment chip → Send reaches the agent", async () => {
-    const waiting = agent.wait(SESSION);
+    const waiting = firstWait;
     await b.eval("comment('p1', 'ship the importer', 'make this bold', 'send')");
     const { events } = await waiting;
     assert.equal(events.length, 1);

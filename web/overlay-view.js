@@ -84,7 +84,9 @@
 
     function renderDock() {
       const open = S.threads.filter((t) => t.status !== "resolved").length;
-      dock.render({ theme: S.theme, open, resolved: S.threads.length - open, unseen: S.threads.filter(unseen).length, drafts: c.drafts().length, conn: S.conn, hidden: S.hidden, update: S.update });
+      // No agent: the daemon says nobody listens (null = unknown, an older daemon) and no thread shows one at work.
+      const agent = c.listening !== false || S.threads.some((t) => t.status === "working");
+      dock.render({ theme: S.theme, open, resolved: S.threads.length - open, unseen: S.threads.filter(unseen).length, drafts: c.drafts().length, conn: S.conn, agent, hidden: S.hidden, update: S.update });
     }
 
     function renderDrawer() {

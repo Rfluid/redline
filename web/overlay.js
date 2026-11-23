@@ -247,6 +247,7 @@
   });
   c.on("open", () => { S.conn = "live"; refresh(); upd.check(); });
   c.on("close", () => { S.conn = "off"; renderDock(); });
+  c.on("presence", renderDock);
   c.on("drafts", dataChanged);
   // For agents, tests and screenshots: Redline.overlay.hide() / show() / toggle() / hidden.
   R.overlay = { hide: () => toggleHidden(true), show: () => toggleHidden(false), toggle: () => toggleHidden(), get hidden() { return S.hidden; } };

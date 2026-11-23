@@ -154,6 +154,7 @@ Reply in a thread to push back (*"No, keep the old endpoint for a month"*), and 
 | Agent doesn't know about redline | Restart the session. Then run `redline doctor` |
 | No redline dock on the page | The agent didn't add the script tag, or the page was opened before it did. Ask it to, then reload |
 | The dock says *Reconnecting…* | The local service isn't running. Run any `redline` command, e.g. `redline list`, then reload. Your comments are kept |
+| The dock says *No agent listening* | Your agent isn't waiting for comments right now. They're kept and reach it when it checks: ask it to "wait for my redline comments" |
 | Agent isn't reacting to comments | Ask it to "wait for my redline comments" |
 | Is the local service running? | `redline status` shows it, with how many comments it holds |
 | Something seems stuck | `redline stop`. It starts again on the next use |

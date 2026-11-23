@@ -93,13 +93,13 @@ Height 34 (28 in dense headers), radius 8, padding 0 12–14. Hover: primary lig
 
 The always-there entry point, replacing the vertical "redline" tab. A pill fixed 24 px from the bottom-right: `--rl-surface`, 1 px `--rl-line`, `--rl-shadow-dock`, padding 6, items 36 tall.
 
-`[mark] N threads · M new replies` · `[spot]` · `[Send K drafts →]` · `● Live`
+`[mark] N threads · M new replies` · `[spot]` · `[Send K drafts →]` · `● Live` (or `○ No agent listening`)
 
 - The mark is `mark.svg` on light pages and `mark-light.svg` on dark ones, 24 px.
 - The summary is a button that opens the drawer, styled as a ghost button so it sits in the dock rather than on it: the count in `--rl-fg` 600, the noun in `--rl-muted`, symmetric 12 px padding, and a `--rl-line-soft` fill only on hover or while the drawer is open. Show "· M new replies" only when there are unseen agent replies (seen = the thread was opened; remembered per artifact in localStorage), in `--rl-agent` 600.
 - **Spot** (ghost icon button): comment on a spot (a chart, an image). It starts the crosshair picker.
 - **Send K drafts** (primary) appears only when K > 0.
-- **Connection:** "Live" with a `--rl-done` dot. Disconnected: "Reconnecting… comments are kept" in `--rl-note-fg`, with a hollow `--rl-note` dot. Never a bare unlabeled dot.
+- **Connection:** "Live" with a `--rl-done` dot, when an agent is listening (tooltip "Connected. Your agent is listening."). Connected but no agent listening: "No agent listening" in `--rl-muted` with a hollow dot, tooltip "No agent is listening right now. Comments wait here until your agent checks." Calm, not a warning: the comments are safe. A thread in `working` counts as an agent there, and so does not knowing yet (an older daemon). Disconnected: "Reconnecting… comments are kept" in `--rl-note-fg`, with a hollow `--rl-note` dot. Never a bare unlabeled dot.
 - **Empty** (no threads, no drafts): mark plus "Select text to comment, or press ⌥C" in `--rl-muted`. After the first comment it collapses to the summary.
 - **Off (clean view):** clicking the mark, or Alt+Shift+R, turns redline off: markers, highlights, popovers, chip, drawer and toast go; the dock shrinks to the mark at 35% opacity (100% on hover or focus), with a 9 px `--rl-agent` dot when replies arrive meanwhile. Remembered per artifact in localStorage. `Redline.overlay.hide()/show()/toggle()` do the same from code.
 

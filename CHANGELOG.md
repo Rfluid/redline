@@ -4,6 +4,9 @@ All notable changes to redline. The format follows [Keep a Changelog](https://ke
 
 ## [Unreleased]
 
+### Added
+- The dock tells you when no agent is listening: "No agent listening" instead of "Live" when no agent session is waiting for this page's comments (none in the last minute). Your comments are kept and reach the agent when it checks. Pages can read it too: `client.listening` and the `presence` event.
+
 ### Fixed
 - `redline wait` without `--since` continues where the last wait for the same artifact or session stopped, instead of returning every comment again.
 
