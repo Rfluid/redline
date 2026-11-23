@@ -18,12 +18,16 @@
     root.append(tpl.content);
     const dock = root.querySelector(".dock"), drawer = root.querySelector(".drawer");
     const toastEl = root.querySelector(".toast"), live = root.querySelector('[aria-live]');
-    /** s = {theme, open, resolved, unseen, drafts, conn: "connecting"|"live"|"off", hidden, update: newer version or null} */
+    /** s = {theme, open, resolved, unseen, drafts, conn: "connecting"|"live"|"off", agent: an agent is listening,
+     *  hidden, update: newer version or null} */
     function render(s) {
       const total = s.open + s.resolved + s.drafts;
       const count = (n, one, many) => `<b>${n}</b> ${n === 1 ? one : many}`;
       const summary = s.open ? count(s.open, "thread", "threads") : s.resolved ? count(s.resolved, "resolved", "resolved") : count(s.drafts, "draft", "drafts");
-      const conn = { connecting: ["", "Connecting…"], live: ["live", "Live"], off: ["off", "Reconnecting… comments are kept"] }[s.conn];
+      // [class, label, tooltip]. Connected but nobody listening is calm, not an error: comments are kept.
+      const conn = s.conn === "live" && !s.agent ? ["live quiet", "No agent listening", "No agent is listening right now. Comments wait here until your agent checks."]
+        : { connecting: ["", "Connecting…", "Connecting to the local redline service"], live: ["live", "Live", "Connected. Your agent is listening."],
+          off: ["off", "Reconnecting… comments are kept", "Not connected to the local redline service"] }[s.conn];
       const keys = MAC ? "⌥⇧R" : "Alt+Shift+R", tip = `${s.hidden ? "Show" : "Hide"} redline (${keys})`;
       dock.classList.toggle("collapsed", s.hidden);
       dock.innerHTML = `<button class="dk-mark" data-a="toggle-hidden" aria-pressed="${s.hidden}" aria-label="${tip}" title="${tip}">${icons.mark(s.theme)}${s.hidden && s.unseen ? `<span class="badge" aria-hidden="true"></span>` : ""}</button>
@@ -32,7 +36,7 @@
         <button class="btn g i" data-a="spot" aria-label="Comment on a spot" title="Comment on a spot: a chart, an image, anything">${icons.spot}</button>
         ${s.drafts ? `<button class="btn p" data-a="send-drafts">Send ${plural(s.drafts, "draft", "drafts")}${icons.send}</button>` : ""}
         ${s.update ? `<button class="dk-upd" data-a="update" aria-haspopup="dialog" title="redline ${esc(s.update)} is available">Update</button>` : ""}
-        <span class="conn ${conn[0]}" title="${s.conn === "live" ? "Connected to your agent" : "Not connected to the local redline service"}">${conn[1]}</span>`;
+        <span class="conn ${conn[0]}" title="${conn[2]}">${conn[1]}</span>`;
     }
 
     /** rows = [{id, key, n, state, anchor, status, unseen, resolved}], drafts first; tab = "open" | "resolved";

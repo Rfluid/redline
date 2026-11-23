@@ -80,6 +80,8 @@ MCP is request/response, so redline offers three delivery paths. Each agent uses
 
 All three read the same event log. Agent-authored events are filtered out of agent waits (`author=user`).
 
+**Is anyone listening?** All three are admin long-polls on `/api/events`, so the daemon knows when an agent is waiting. `daemon/presence` counts the polls in flight by filter (also shown by `redline status`) and remembers when each filter's last poll ended. An artifact is listened to while a poll covering it (its id, its session, or no filter) is in flight, or for 60 s after one ended, which bridges the agent's work between polls. Each change goes to the artifact's WebSockets as a `presence` frame, and the dock shows "No agent listening" when nobody is, so a user knows a comment won't be seen yet. Presence is in memory only and never enters the event log: it records no write.
+
 **Channels** (checked 2026-10-16 against code.claude.com/docs/en/channels-reference): the server declares `experimental["claude/channel"]: {}` only with `--channel`, and sends `notifications/claude/channel` with `{content, meta}`, where `meta` values are strings with identifier keys. Claude Code won't register a channel on protocol revision 2026-07-28, which rmcp prefers, so `--channel` caps the supported revisions at 2025-11-25. The push loop starts at the current head, so a restart doesn't replay old comments. Claude Code must be started with `--dangerously-load-development-channels server:<name>` (interactive only), and Team/Enterprise orgs must allow channels.
 
 ## Security model

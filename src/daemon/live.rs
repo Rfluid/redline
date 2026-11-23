@@ -13,8 +13,8 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::broadcast;
 use tokio::sync::broadcast::error::RecvError;
+use tokio::sync::{broadcast, watch};
 
 const MAX_WAIT_SECS: u64 = 600;
 
@@ -65,7 +65,9 @@ pub struct TokenQuery {
     token: Option<String>,
 }
 
-/// Push channel for the artifact side: every event on this artifact, as JSON text frames.
+/// Push channel for the artifact side: every event on this artifact, as JSON text frames, plus a
+/// `{"type":"presence","listening":bool}` frame on open and whenever an agent starts or stops
+/// listening for this artifact (see `presence`).
 pub async fn ws(
     State(app): State<Arc<App>>,
     Path(id): Path<String>,
@@ -74,12 +76,41 @@ pub async fn ws(
 ) -> ApiResult<Response> {
     app.author_for(q.token.as_deref(), &id)?;
     let rx = app.tx.subscribe();
-    Ok(up.on_upgrade(move |sock| ws_loop(sock, rx, id)))
+    let presence = app.presence_tx.subscribe();
+    Ok(up.on_upgrade(move |sock| ws_loop(app, sock, rx, presence, id)))
 }
 
-async fn ws_loop(mut sock: WebSocket, mut rx: broadcast::Receiver<Event>, id: String) {
+async fn ws_loop(
+    app: Arc<App>,
+    mut sock: WebSocket,
+    mut rx: broadcast::Receiver<Event>,
+    mut presence: watch::Receiver<()>,
+    id: String,
+) {
     tracing::debug!(artifact = %id, "ws open");
+    let mut sent = None;
+    // Some(t): listening only thanks to the grace window, which runs out at t: recheck then.
+    let mut recheck = None;
+    let mut dirty = true;
     loop {
+        if dirty {
+            dirty = false;
+            let p = app.presence(&id);
+            recheck = p.until;
+            if sent != Some(p.listening) {
+                sent = Some(p.listening);
+                let frame = json!({ "type": "presence", "listening": p.listening }).to_string();
+                if sock.send(WsMessage::Text(frame.into())).await.is_err() {
+                    break;
+                }
+            }
+        }
+        let expiry = async {
+            match recheck {
+                Some(t) => tokio::time::sleep_until(t.into()).await,
+                None => std::future::pending::<()>().await,
+            }
+        };
         tokio::select! {
             ev = rx.recv() => match ev {
                 Ok(ev) if ev.artifact_id == id => {
@@ -90,6 +121,8 @@ async fn ws_loop(mut sock: WebSocket, mut rx: broadcast::Receiver<Event>, id: St
                 Ok(_) | Err(RecvError::Lagged(_)) => {}
                 Err(RecvError::Closed) => break,
             },
+            r = presence.changed() => if r.is_err() { break } else { dirty = true },
+            () = expiry => dirty = true,
             msg = sock.recv() => if !matches!(msg, Some(Ok(_))) { break },
         }
     }

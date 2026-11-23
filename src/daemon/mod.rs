@@ -6,6 +6,7 @@ mod auth;
 mod handlers;
 mod limits;
 mod live;
+mod presence;
 mod update;
 
 use crate::ids::now_ms;
@@ -18,10 +19,9 @@ use axum::http::Request;
 use axum::http::header;
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
-use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use tokio::sync::broadcast;
+use tokio::sync::{broadcast, watch};
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::{Level, info_span};
@@ -62,28 +62,12 @@ pub struct App {
     tx: broadcast::Sender<Event>,
     /// Unix ms at startup; clients compare it with their binary's mtime (see `crate::lifecycle`).
     started: i64,
-    /// Long-polls in progress, by filter (for `redline status`).
-    waiting: Mutex<BTreeMap<String, usize>>,
+    /// Agent long-polls in flight and recently ended: `redline status` and the dock's presence.
+    listeners: Mutex<presence::Listeners>,
+    /// Ticks whenever a long-poll starts or ends; artifact `WebSocket`s then recheck their presence.
+    presence_tx: watch::Sender<()>,
     /// `config.toml` and the cached release check (see `crate::update`).
     update: crate::update::Files,
-}
-
-/// Counts one long-poll for its lifetime; dropping it (return or client gone) uncounts it.
-pub(super) struct Waiting<'a> {
-    app: &'a App,
-    key: String,
-}
-
-impl Drop for Waiting<'_> {
-    fn drop(&mut self) {
-        let mut w = self.app.waiting.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(n) = w.get_mut(&self.key) {
-            *n -= 1;
-            if *n == 0 {
-                w.remove(&self.key);
-            }
-        }
-    }
 }
 
 impl App {
@@ -101,7 +85,8 @@ impl App {
             admin: admin_token,
             tx,
             started: now_ms(),
-            waiting: Mutex::default(),
+            listeners: Mutex::default(),
+            presence_tx: watch::channel(()).0,
             update,
         })
     }
@@ -112,15 +97,6 @@ impl App {
         // No receivers is fine: nobody is listening right now.
         let _ = self.tx.send(ev.clone());
         ev
-    }
-
-    pub(super) fn wait_guard(&self, key: String) -> Waiting<'_> {
-        *self.waiting.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(key.clone()).or_default() += 1;
-        Waiting { app: self, key }
-    }
-
-    pub(super) fn waiting(&self) -> BTreeMap<String, usize> {
-        self.waiting.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
     }
 
     /// Locks the store. A poisoned lock means a handler panicked mid-write; keep serving.

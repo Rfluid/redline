@@ -12,6 +12,7 @@ pub(super) const ADMIN: &str = "admin-token";
 
 pub(super) struct T {
     router: Router,
+    app: Arc<App>,
     /// Holds `config.toml` and `update.json`, so no test reads or writes the user's.
     pub(super) dir: tempfile::TempDir,
 }
@@ -22,7 +23,8 @@ impl T {
         let dir = tempfile::tempdir().unwrap();
         let files =
             crate::update::Files { config: dir.path().join("config.toml"), cache: dir.path().join("update.json") };
-        Self { router: router(App::with_update_files(store, ADMIN.into(), files)), dir }
+        let app = App::with_update_files(store, ADMIN.into(), files);
+        Self { router: router(app.clone()), app, dir }
     }
 
     pub(super) async fn call(
@@ -193,6 +195,31 @@ async fn long_poll_wakes_on_submit() {
     assert_eq!(v["events"][0]["thread"]["messages"][0]["body"], "wake up");
     assert_eq!(v["next"], v["events"][0]["seq"]);
     assert_eq!(t.get("/api/status", Some(ADMIN)).await.1["waiting"], json!({}), "uncounted when done");
+}
+
+#[tokio::test]
+async fn a_session_long_poll_makes_its_artifacts_listened_to() {
+    let t = T::new();
+    let (a, _) = t.artifact("ses_p").await;
+    let (other, _) = t.artifact("ses_other").await;
+    assert!(!t.app.presence(&a).listening, "nobody polls yet");
+    let mut ticks = t.app.presence_tx.subscribe();
+    let r = t.router.clone();
+    let poll = tokio::spawn(async move {
+        let req = Request::get("/api/events?since=0&timeout=1&session=ses_p")
+            .header("authorization", format!("Bearer {ADMIN}"))
+            .body(Body::empty())
+            .unwrap();
+        r.oneshot(req).await.unwrap()
+    });
+    tokio::time::timeout(Duration::from_secs(5), ticks.changed()).await.unwrap().unwrap();
+    assert_eq!(t.app.presence(&a), presence::Presence { listening: true, until: None }, "in flight");
+    assert!(!t.app.presence(&other).listening, "another session's artifact");
+    poll.await.unwrap();
+    let after = t.app.presence(&a);
+    assert!(after.listening && after.until.is_some(), "within the grace window: {after:?}");
+    // Polls never write: presence leaves the event log alone.
+    assert_eq!(t.get("/api/status", Some(ADMIN)).await.1["events"], 0);
 }
 
 #[tokio::test]

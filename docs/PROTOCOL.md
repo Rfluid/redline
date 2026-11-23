@@ -23,7 +23,7 @@ Everything here is served by `redline serve` at `http://127.0.0.1:7465`. The por
 | GET | `/api/artifacts/{id}/threads` | admin, artifact | | `Thread[]` |
 | POST | `/api/artifacts/{id}/submit` | admin, artifact | `{threads:[{anchor, body, image?}], replies:[{thread_id, body, status?}]}`; `image` = `{mime, data}` (base64) | `Event[]`, all or nothing |
 | GET | `/api/attachments/{id}` | admin, that artifact's token | | the image bytes (`Content-Type` png/jpeg/webp) |
-| GET | `/api/artifacts/{id}/ws?token=` | artifact, admin | | WebSocket of `Event` JSON text frames |
+| GET | `/api/artifacts/{id}/ws?token=` | artifact, admin | | WebSocket of JSON text frames: each `Event` on the artifact, plus `{"type": "presence", "listening": bool}` on open and whenever it changes (see below) |
 | POST | `/api/threads/{id}/messages` | admin, artifact | `{body, status?}` | `Event` |
 | POST | `/api/threads/{id}/status` | admin, artifact | `{status, note?}` (`note` ≤ 1 KiB: progress shown under `working`) | `Event` |
 | GET | `/api/artifacts/{id}/update` | admin, artifact | | `UpdateInfo` |
@@ -47,6 +47,7 @@ Everything here is served by `redline serve` at `http://127.0.0.1:7465`. The por
 - **Version handshake.** Before each call, clients read `/health`. They replace the daemon (SIGTERM to the `pid` it reports, `taskkill /F` on Windows, then start a new one) when it runs an older version, or the same version but `started` is before the client binary's mtime (a rebuild). A newer daemon is left alone.
 - **Update notices.** `UpdateInfo` = `{current, latest, available, notify, check, skipped, checked, command, notes}`: built from the cached release check (`update.json`) and `[update]` in `config.toml`, never from the network. `notify` = `available && check && !skipped`; show a notice only then. Any token for the artifact may dismiss: it only hides a notice. `version` must be `X.Y.Z`.
 - **`/api/events` is a long-poll.** It returns as soon as there are events with `seq > since` (at most 100), or `{events: [], next: since}` after `timeout`.
+- **Presence.** An admin long-poll on `/api/events` is an agent listening. It covers an artifact when its filter is that `artifact`, the artifact's `session`, or none. The artifact counts as listened to while such a poll is in flight and for 60 s after the last one ended (agents work between polls). The artifact's WebSocket gets `{"type": "presence", "listening": true|false}` right after it opens and on every change. Presence is in memory only: it is not an `Event`, has no `seq`, and is never in `/api/events`. Event frames have no `type` field.
 
 ## Types
 
@@ -125,6 +126,8 @@ await client.submitDrafts();                           // all, or submitDrafts([
 
 client.on("event", (ev) => …);                         // live: replies, status changes
 client.on("open" | "close" | "drafts", …);
+client.on("presence", (listening) => …);               // an agent started or stopped listening for comments
+client.listening;                                      // true | false; null until the daemon says, and while disconnected
 client.connect();                                      // WebSocket, auto-reconnect with backoff
 
 anchors.fromSelection();                               // text anchor from the current selection

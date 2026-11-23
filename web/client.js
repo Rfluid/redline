@@ -27,6 +27,8 @@
       this.token = o.token;
       this._draftKey = `redline:drafts:${this.artifact}`;
       this._retry = 500;
+      /** Is an agent listening for this artifact's comments? true/false, or null when unknown. */
+      this.listening = null;
     }
 
     async _fetch(path, opts = {}) {
@@ -87,13 +89,20 @@
       return events;
     }
 
-    /** Live events (agent replies, status changes, other tabs' comments). Emits "event", "open", "close". */
+    /** Live events (agent replies, status changes, other tabs' comments). Emits "event", "open", "close",
+     *  and "presence" (true/false: whether an agent is listening for this artifact's comments right now,
+     *  also kept in `client.listening`; null until the daemon says, and while disconnected). */
     connect() {
       const url = `${this.server.replace(/^http/, "ws")}/api/artifacts/${this.artifact}/ws?token=${encodeURIComponent(this.token)}`;
       const ws = (this._ws = new WebSocket(url));
       ws.onopen = () => { this._retry = 500; this.emit("open"); };
-      ws.onmessage = (m) => { try { this.emit("event", JSON.parse(m.data)); } catch {} };
+      ws.onmessage = (m) => {
+        let d;
+        try { d = JSON.parse(m.data); } catch { return; }
+        if (d.type === "presence") { this.listening = !!d.listening; this.emit("presence", this.listening); } else this.emit("event", d);
+      };
       ws.onclose = () => {
+        this.listening = null;
         this.emit("close");
         if (this._closed) return;
         setTimeout(() => this.connect(), this._retry);

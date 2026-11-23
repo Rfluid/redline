@@ -71,6 +71,8 @@ Repeat until the user says they're done:
    Replies show up live under the user's comment. Keep them short; the change itself is the main answer. Markdown works: **bold**, *italic*, ~~strike~~, `code`, fenced code, nested lists, `- [x]` tasks, `>` quotes, tables, headings (shown as bold lines), [links](https://…) and bare URLs (http/https/mailto only). No HTML.
 5. Don't resolve threads yourself unless the user asked you to. Resolving is their call.
 
+The page's dock shows "Live" while you wait for comments (and for a minute after each wait ends, while you work), and "No agent listening" otherwise. So keep a wait running for as long as the user reviews.
+
 When the artifact is regenerated or reloaded, the threads remain. Text anchors re-attach by quote and context. If you edit the quoted text, the overlay finds it by its surrounding text and tags the thread `edited`; if the text is gone, the thread shows as `detached` with the original quote. Say what you changed in your reply.
 
 ## Comments pushed to you (Claude Code channels)

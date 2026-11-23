@@ -173,6 +173,13 @@ The v1 overlay borrowed stock parts (Material red and blue, Bootstrap alert past
 
 Considered: a quiet neutral dev-tool look (safe, forgettable), a friendly collab look (avatars, soft cards: familiar but generic), a terminal look (polarizing). The editorial direction follows from the name (see "Name"). Mockups: a private claude.ai design canvas, "redline redesign"; `.design/` wins when they disagree. Implementation: ROADMAP P7.
 
+## Agent presence: long-polls in flight, a 60 s grace, a WebSocket-only frame
+
+"Live" in the dock meant only that the page's WebSocket was up. A user could comment while no agent session was waiting, and nothing said the comment would sit unread. The daemon already counted long-polls for `redline status`, and every delivery path (`wait_for_comments`, `redline wait`, the channel push) is one, so presence reuses that: no heartbeat, no new call for agents to make, nothing agent-specific (invariant 8).
+- **Grace window, 60 s.** Agents work between polls (often tens of seconds; `wait_for_comments` also returns every 120 s by default). Counting only polls in flight would make the dock flicker to "No agent listening" while the agent is busy on your comment. A minute covers that, and still tells you soon enough that a session went away. A thread in `working` also counts as an agent present in the overlay, so a long edit never reads as nobody there.
+- **Not an event.** Invariant 4 is about writes; presence is derived, ephemeral state. Putting it in the log would wake every agent wait on its own polling. It travels only as a `{"type": "presence"}` WebSocket frame, sent on open (so a fresh page is right at once) and on each change. Event frames have no `type`, so clients tell them apart; `client.js` routes it to `client.listening` and a `presence` event, so old bindings that only handle `event` see no change.
+- **Unknown reads as listening.** Before the first frame, or with an older daemon, the overlay shows "Live" as before rather than warn on no evidence.
+
 ---
 
 # Proposals (ROADMAP Phase 2): drafts, not approved

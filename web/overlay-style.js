@@ -171,7 +171,8 @@
   .dk-empty { padding: 0 12px 0 4px; font: 400 13px/18px var(--rl-font-ui); color: var(--rl-muted); white-space: nowrap; }
   .conn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-left: 1px solid var(--rl-line); font: 400 12px/1 var(--rl-font-ui); color: var(--rl-muted); white-space: nowrap; }
   .conn::before { content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid currentColor; }
-  .conn.live { color: var(--rl-done); } .conn.live::before { background: currentColor; } .conn.off { color: var(--rl-note-fg); } .conn.off::before { color: var(--rl-note); }
+  .conn.live { color: var(--rl-done); } .conn.live::before { background: currentColor; }
+  .conn.live.quiet { color: var(--rl-muted); } .conn.live.quiet::before { background: none; } .conn.off { color: var(--rl-note-fg); } .conn.off::before { color: var(--rl-note); }
   .dock.collapsed > :not(.dk-mark) { display: none; }
   .dock.collapsed { padding: 4px; opacity: .35; box-shadow: none; transition: opacity var(--rl-dur-fast); }
   .dock.collapsed:hover, .dock.collapsed:focus-within { opacity: 1; }
