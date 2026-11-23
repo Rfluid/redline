@@ -54,6 +54,15 @@ out="$("$R" wait --session ses_test --since "$next" --timeout 1)"
 [[ "$(jq '.events | length' <<<"$out")" == 0 ]] || fail "agent's own events should not wake the agent"
 ok "agent events filtered from agent wait"
 
+# A bare wait continues where the last wait with the same filter stopped: no replay of handled comments.
+curl -fsS "$base/api/artifacts/$art/submit" -H "authorization: Bearer $tok" -H 'content-type: application/json' \
+  -d '{"threads":[{"anchor":{"kind":"text","quote":"World"},"body":"and this"}]}' >/dev/null
+out="$("$R" wait --session ses_test --timeout 5)"
+[[ "$(jq -r '[.events[].thread.messages[-1].body] | join(",")' <<<"$out")" == "and this" ]] || fail "bare wait replayed: $out"
+[[ "$(jq '.events | length' <<<"$("$R" wait --session ses_test --timeout 1)")" == 0 ]] || fail "bare wait repeated the last batch"
+[[ "$(jq '.events | length' <<<"$("$R" wait --session ses_test --since 0 --timeout 1)")" == 3 ]] || fail "--since 0 replays all"
+ok "bare wait resumes from the saved cursor"
+
 mcp_out="$(printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"e2e","version":"0"}}}' \
   '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
@@ -62,7 +71,7 @@ mcp_out="$(printf '%s\n' \
   | "$E" mcp)"
 [[ "$(jq -s 'length' <<<"$mcp_out")" == 3 ]] || fail "mcp responses: $mcp_out"
 jq -se '.[1].result.tools | map(.name) | index("wait_for_comments") != null' <<<"$mcp_out" >/dev/null || fail "tools/list"
-jq -se '.[2].result.content[0].text | fromjson | length == 2' <<<"$mcp_out" >/dev/null || fail "tools/call list_threads"
+jq -se '.[2].result.content[0].text | fromjson | length == 3' <<<"$mcp_out" >/dev/null || fail "tools/call list_threads"
 ok "mcp initialize, tools/list, tools/call"
 
 # Concurrency: two MCP sessions on one daemon, each waiting on its own artifact.
@@ -187,7 +196,7 @@ ok "a wait rides through a daemon restart"
 # Version handshake: a binary rebuilt after the daemon started replaces it on the next call.
 sleep 1.1
 touch "$repo/target/release/redline$EXE"
-"$R" list "$art" | jq -e 'length == 4' >/dev/null || fail "threads survive restart"
+"$R" list "$art" | jq -e 'length == 5' >/dev/null || fail "threads survive restart"
 pid3="$(jq -r .pid "$REDLINE_HOME/daemon.json")"
 [[ "$pid3" != "$pid2" ]] || fail "stale daemon not replaced after rebuild"
 "$R" list >/dev/null

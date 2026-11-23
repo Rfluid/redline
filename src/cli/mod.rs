@@ -1,6 +1,7 @@
 //! Command-line interface: argument types and dispatch. The commands' bodies live in `commands`.
 
 mod commands;
+mod cursor;
 
 use crate::api::Api;
 use crate::model::{Artifact, RegisterArtifact};
@@ -58,8 +59,9 @@ enum Cmd {
         artifact: Option<String>,
         #[arg(long, env = "REDLINE_SESSION")]
         session: Option<String>,
-        #[arg(long, default_value_t = 0)]
-        since: i64,
+        /// Start after this event seq. Default: where the last wait with the same --artifact/--session stopped.
+        #[arg(long)]
+        since: Option<i64>,
         #[arg(long, default_value_t = 300)]
         timeout: u64,
     },
@@ -195,8 +197,12 @@ fn dispatch(cmd: Cmd) -> Result<()> {
             print(&v)
         }
         Cmd::Wait { artifact, session, since, timeout } => {
-            let (events, next) =
-                Api::connect()?.wait_through_restarts(since, timeout, artifact.as_deref(), session.as_deref())?;
+            let (artifact, session) = (artifact.as_deref(), session.as_deref());
+            let file = cursor::file(&paths::state_dir()?, artifact, session);
+            let api = Api::connect()?;
+            let since = cursor::start(since, cursor::load(&file), || api.status().ok().map(|s| s.head));
+            let (events, next) = api.wait_through_restarts(since, timeout, artifact, session)?;
+            cursor::save(&file, next);
             print(&json!({ "events": events, "next": next }))
         }
         Cmd::List { artifact: None } => print(&Api::connect()?.get("/api/artifacts", READ_TIMEOUT)?),
