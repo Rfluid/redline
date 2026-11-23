@@ -59,6 +59,7 @@ Repeat until the user says they're done:
 1. Call `wait_for_comments` (no `since`; the server tracks the cursor). It blocks until comments arrive or it times out.
    - **Timed out with nothing new:** call it again. Don't report each timeout to the user.
    - **Background shell instead (Claude Code's background Bash, or any agent that is notified when a background command exits):** see "Waiting in the background" below.
+   - **No MCP tools and no exit notifications:** see "When nothing can wake you" below.
 2. For each event, read the thread: `anchor` (what they pointed at: `quote`, `selector`, `key`) and `messages` (the conversation, oldest first). The newest user message is the request.
    - **Region comments** (`anchor.kind: "region"`): the user clicked a spot, at `ex`/`ey` (fractions) inside the element `selector`. If `anchor.image` is set, call `get_image(attachment_id)` (CLI: `redline image <id> --out shot.png`) to see what they pointed at.
 3. Classify and act:
@@ -88,6 +89,14 @@ Use this when your agent can run a shell command in the background and gets noti
 4. Start the next background wait with `redline wait --session <session> --timeout 600`: without `--since` it continues where the last wait with that `--session` stopped (`--since <next>` does the same). Repeat until the user is done.
 
 Use one cursor: either this recipe or `wait_for_comments`, not both at once, or each sees only part of the stream.
+
+## When nothing can wake you
+
+Without the `redline` MCP tools, a channel, or a shell that notifies you when a background command exits, a comment can't interrupt you. It waits in the daemon until you run `redline wait`. That's easy to miss: the user comments and nothing happens.
+
+1. **Fix the setup if you can.** Run `redline doctor`. If the MCP server is missing because your host runs Claude Code with its own `CLAUDE_CONFIG_DIR` (as some desktop apps do), suggest `redline install --claude-config-dir <that dir>` and a session restart. Don't run `install` without the user's OK.
+2. **Otherwise, say so when you open the review.** Tell the user something like: "I can't see comments as they arrive here. Comment away, then tell me (for example 'check') and I'll pick them up."
+3. **Check on every user message** during the review, before anything else: `redline wait --session <session> --timeout 1`. It returns only comments you haven't seen, so a check with nothing new is cheap. Handle them as in the review loop.
 
 ## Status
 
